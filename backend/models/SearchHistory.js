@@ -1,11 +1,16 @@
 const mongoose = require("mongoose");
 
-const searchHistorySchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  searchQuery: { type: String, required: true }, // This will now store stringified JSON of {code, review, language, timestamp}
+const reviewSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "log_reg_form",
+    required: true,
+  },
+  code: { type: String, required: true },
+  review: { type: String, required: true },
+  language: { type: String, required: true },
   timestamp: { type: Date, default: Date.now },
 });
 
-const SearchHistory = mongoose.model("SearchHistory", searchHistorySchema);
-
+const SearchHistory = mongoose.model("SearchHistory", reviewSchema);
 module.exports = SearchHistory;

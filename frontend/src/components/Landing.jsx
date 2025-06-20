@@ -1,3 +1,4 @@
+// Landing.jsx
 "use client";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -12,8 +13,9 @@ import {
   Zap,
   CheckCircle,
 } from "lucide-react";
-import lockImage from "../assets/lock.png";
+import lockImage from "../assets/code.png";
 import { useState, useEffect } from "react";
+import axios from "axios"; // Import axios
 
 export default function CodeReviewLanding() {
   //use nagivate
@@ -21,8 +23,9 @@ export default function CodeReviewLanding() {
 
   // State for scroll detection
   const [isScrolled, setIsScrolled] = useState(false);
-  const [token, settoken] = useState(false);
+  const [token, settoken] = useState(false); // Changed to represent authentication status
   const [refresh, setrefresh] = useState(false);
+  const [loadingAuth, setLoadingAuth] = useState(true); // New state for managing auth loading
 
   // State for contact form
   const [formData, setFormData] = useState({
@@ -40,47 +43,59 @@ export default function CodeReviewLanding() {
   }, []);
 
   useEffect(() => {
+    // Configure axios to send cookies with all requests from this component
+    axios.defaults.withCredentials = true;
+
     const getting = async () => {
+      setLoadingAuth(true); // Start loading authentication status
       try {
         // Check for authentication token
-        const response = await fetch("http://localhost:3000/api/tokengetter", {
-          method: "POST",
-          credentials: "include", // ✅ Important for cookies
-        });
-        const getRes = await response.json();
-        if (getRes.success == true) {
-          settoken(getRes.token);
-          // If user is authenticated, redirect to try page (AI Code Reviewer)
-          navigate("/try");
+        const response = await axios.post(
+          "http://localhost:3000/api/tokengetter"
+        );
+        // If the request is successful (axios throws error for 4xx/5xx by default)
+        console.log("Tokengetter response:", response.data);
+        if (response.data.success === true) {
+          settoken(true); // User is authenticated
+          // You can also store user data here if needed:
+          // setUserData(response.data.decode);
         } else {
-          settoken(false);
-          console.error("token not found");
+          settoken(false); // User is not authenticated
+          console.log(
+            "Not authenticated, backend responded:",
+            response.data.message
+          );
         }
-        console.log("token check", getRes);
       } catch (error) {
-        console.error("Error checking token:", error);
-        settoken(false);
+        // Axios catches 401 Unauthorized here, as well as network errors
+        console.error(
+          "Authentication check failed:",
+          error.response ? error.response.data : error.message
+        );
+        settoken(false); // User is not authenticated
+      } finally {
+        setLoadingAuth(false); // Authentication check is complete
       }
     };
     getting();
-  }, [refresh, navigate]);
+  }, [refresh]); // refresh state is used to manually trigger re-check, navigate not needed as dependency here
 
   // Logout handler
   const handleLogout = async () => {
     console.log("logout..");
 
     try {
-      const response = await fetch("http://localhost:3000/api/logout", {
-        method: "POST",
-        credentials: "include", // ✅ Important for cookies
-      });
-      const getres = await response.json();
-      if (getres.success == true) {
-        settoken(false);
-        setrefresh((prev) => !prev); // Toggle refresh to trigger token check
+      const response = await axios.post("http://localhost:3000/api/logout"); // Use axios for consistency
+      if (response.data.success === true) {
+        settoken(false); // Clear authentication status
+        setrefresh((prev) => !prev); // Toggle refresh to trigger token check (will now find no token)
+        navigate("/login"); // Redirect to login page after successful logout
       }
     } catch (error) {
-      console.error("Error during logout:", error);
+      console.error(
+        "Error during logout:",
+        error.response ? error.response.data : error.message
+      );
     }
   };
 
@@ -91,6 +106,7 @@ export default function CodeReviewLanding() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // NOTE: This contact form uses localhost:5000, ensure your form backend is running there
       const response = await fetch("http://localhost:5000/api/form/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -162,6 +178,15 @@ export default function CodeReviewLanding() {
         "We've reduced our bug rate by 73% since implementing CodeReviewer. The ROI has been incredible.",
     },
   ];
+
+  // Render a loading state while authentication is being checked
+  if (loadingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-700">
+        Checking authentication status...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -1102,7 +1127,7 @@ export default function CodeReviewLanding() {
         }
 
         @media (min-width: 1536px) {
-          .\\32xl\\:text-\\[3\\.75rem\\] {
+          .\\32xl\\:text-\\[3\.75rem\\] {
             font-size: 3.75rem;
           }
         }
@@ -1135,6 +1160,7 @@ export default function CodeReviewLanding() {
           <div className="flex items-center space-x-4">
             <button
               onClick={() => {
+                // Redirect based on authentication status
                 token ? navigate("/try") : navigate("/register");
               }}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors border ${
@@ -1147,6 +1173,7 @@ export default function CodeReviewLanding() {
             </button>
             <button
               onClick={() => {
+                // Logout if authenticated, otherwise navigate to Login
                 token ? handleLogout() : navigate("/login");
               }}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-all shadow-lg ${
@@ -1160,9 +1187,9 @@ export default function CodeReviewLanding() {
           </div>
         </div>
       </nav>
-
-      {/* Hero Section */}
-      <section className="pt-32 md:pt-40 pb-16 md:pb-24 bg-white text-black">
+      <section className="pt-32 md:pt-40 pb-16 md:pb-24 bg-white text-black overflow-hidden">
+        {" "}
+        {/* Added overflow-hidden to prevent horizontal scroll issues from animations */}
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
@@ -1172,65 +1199,54 @@ export default function CodeReviewLanding() {
               transition={{ duration: 0.6, ease: "easeOut" }}
               className="space-y-6 text-center md:text-left"
             >
-              <span className="inline-block px-5 py-2 text-sm md:text-base font-medium bg-black/10 rounded-full animate-pulse">
+              {/* Using a more semantic button for the tag, with ARIA-hidden for screen readers if it's purely decorative */}
+              <span
+                className="inline-block px-5 py-2 text-sm md:text-base font-medium bg-black/10 rounded-full animate-pulse"
+                aria-hidden="true" // Indicate it's decorative for accessibility
+              >
                 🚀 AI-Powered Code Reviews
               </span>
+
               <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight leading-tight">
                 Improve Your Code Quality with{" "}
                 <span className="text-accent">AI Automation</span>
               </h1>
-              <p className="text-base md:text-lg text-black/80">
-                Detect errors and errors line, security vulnerabilities, and
-                performance issues before deployment. Our AI-driven code
-                reviewer continuously analyzes your code , and provides
-                actionable feedback in real-time.
+
+              <p className="text-base md:text-lg text-black/80 max-w-prose mx-auto md:mx-0">
+                {" "}
+                {/* Added max-w-prose for better readability on large screens */}
+                Detect errors, security vulnerabilities, and performance issues
+                before deployment. Our AI-driven code reviewer continuously
+                analyzes your code and provides actionable feedback in
+                real-time.
               </p>
 
-              {/* CTA Buttons */}
-              <div className="flex flex-wrap gap-3 justify-center md:justify-start">
+              {/* CTA Buttons - Adjusted to reflect token status */}
+              <div className="flex flex-wrap gap-3 justify-center md:justify-start pt-2">
+                {" "}
+                {/* Added pt-2 for slight vertical separation from paragraph */}
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="bg-black text-white px-6 md:px-8 py-3 md:py-4 rounded-full font-semibold text-lg shadow-lg transition-all"
+                  onClick={() =>
+                    token ? navigate("/try") : navigate("/register")
+                  }
+                  className="bg-black text-white px-7 md:px-9 py-3.5 md:py-4.5 rounded-full font-semibold text-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black" // Added focus styles for accessibility
                 >
-                  🚀 Get Started for Free
+                  🚀 {token ? "Go to Reviewer" : "Get Started for Free"}
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="relative border-2 border-black text-white px-6 md:px-8 py-3 md:py-4 rounded-full font-semibold text-lg shadow-md transition-all"
+                  className="relative border-2 border-black text-black px-7 md:px-9 py-3.5 md:py-4.5 rounded-full font-semibold text-lg shadow-md transition-all hover:bg-black hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black" // Changed text-white to text-black and added hover for visual feedback
                 >
                   🎬 Watch Demo
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full animate-bounce">
+                    {" "}
+                    {/* Added animate-bounce for a subtle attention grab */}
                     New
                   </span>
                 </motion.button>
-              </div>
-
-              {/* Features List */}
-              <div className="grid grid-cols-2 gap-4 pt-4 justify-center md:justify-start">
-                {[
-                  "No credit card required",
-                  "AI-powered real-time analysis",
-                  "14-day free trial",
-                  "Supports multiple languages",
-                  "Cancel anytime",
-                  " Automatically detects syntax errors, security vulnerabilities, and performance issues in real-time.",
-                  "Supports multiple programming languages like JavaScript, Python, Java, C++, and more.",
-                ].map((text, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="flex items-center gap-2"
-                  >
-                    <Check className="h-5 w-5 text-accent" />
-                    <span className="text-sm md:text-base text-black/80">
-                      {text}
-                    </span>
-                  </motion.div>
-                ))}
               </div>
             </motion.div>
 
@@ -1239,18 +1255,18 @@ export default function CodeReviewLanding() {
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, ease: "easeOut" }}
-              className="relative rounded-xl overflow-hidden shadow-xl flex justify-center"
+              className="relative rounded-xl overflow-hidden shadow-xl flex justify-center p-4 md:p-0" // Added padding for image on smaller screens
             >
               <img
                 src={lockImage}
-                alt="Code Review Illustration"
-                className="w-auto max-w-[250px] sm:max-w-[300px] md:max-w-[400px] h-auto object-contain"
+                alt="Illustration showing secure code review or code quality improvement" // More descriptive alt text for accessibility
+                className="w-auto max-w-xs sm:max-w-sm md:max-w-md h-auto object-contain" // Adjusted max-width for smoother scaling
+                loading="lazy" // Added lazy loading for performance
               />
             </motion.div>
           </div>
         </div>
       </section>
-
       {/* Features Section */}
       <section id="features" className="py-16 md:py-24 bg-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">

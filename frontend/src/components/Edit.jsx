@@ -37,25 +37,22 @@ export default function Edit() {
   const { logout } = useAuth();
   const navigate = useNavigate();
 
-  // New useEffect to fetch review history on component mount
   useEffect(() => {
     const fetchReviewHistory = async () => {
       try {
         const response = await axios.get(
           "http://localhost:3000/api/get-review-history",
           {
-            withCredentials: true, // Important for sending cookies
+            withCredentials: true,
           }
         );
         setReviewHistory(response.data);
       } catch (error) {
         console.error("Error fetching review history:", error);
-        // Handle error, e.g., show a message to the user
       }
     };
-
     fetchReviewHistory();
-  }, [userInfo]); // Re-fetch if userInfo changes (e.g., after login)
+  }, [userInfo]);
 
   useEffect(() => {
     const getUserInfo = async () => {
@@ -85,69 +82,69 @@ export default function Edit() {
 
     setLoading(true);
     try {
+      console.log("Frontend: Sending review request...");
+
       const reviewResponse = await axios.post(
         "http://localhost:3000/api/get-review",
         {
           code,
-          language: "javascript", // Fixed language
-        }
+          language: "javascript",
+        },
+        { withCredentials: true }
       );
 
-      const newReview = {
-        id: Date.now(), // Local ID, will be replaced by DB _id when fetched
-        code,
-        review: reviewResponse.data,
-        language: "javascript",
-        timestamp: new Date().toLocaleString(),
-      };
+      const reviewText = reviewResponse.data;
 
-      setReview(reviewResponse.data);
-      // setReviewHistory([newReview, ...reviewHistory.slice(0, 9)]); // Old local history management
-      // setCurrentReviewIndex(0);
+      // ✅ Set review text
+      setReview(reviewText);
 
-      // Save review to backend
-      const saveHistoryResponse = await axios.post(
+      // ⚡️ Save review
+      await axios.post(
         "http://localhost:3000/api/save-review-history",
         {
-          code: newReview.code,
-          review: newReview.review,
-          language: newReview.language,
-          timestamp: newReview.timestamp,
+          code,
+          review: reviewText,
+          language: "javascript",
         },
-        { withCredentials: true } // Important for sending cookies
+        { withCredentials: true }
       );
-
-      if (saveHistoryResponse.status === 201) {
-        // After saving, re-fetch the history to get the latest (including the new item with its DB ID)
-        const updatedHistoryResponse = await axios.get(
-          "http://localhost:3000/api/get-review-history",
-          {
-            withCredentials: true,
-          }
-        );
-        setReviewHistory(updatedHistoryResponse.data);
-        setCurrentReviewIndex(0); // Select the newly added item (it will be at index 0 because of sorting)
-      }
     } catch (error) {
-      console.error("Error fetching or saving review:", error);
-      setReview(
-        "❌ **Error**: Failed to get code review or save history. Please check your connection and try again."
-      );
+      console.error("Error during code review:", error);
+      if (error.response) {
+        console.error("Error response data:", error.response.data);
+        console.error("Error response status:", error.response.status);
+        if (error.response.status === 401) {
+          alert("Session expired or unauthorized. Please log in again.");
+          logout();
+        } else {
+          alert(
+            "Failed to get review: " +
+              (error.response.data.message || error.message)
+          );
+        }
+      } else if (error.request) {
+        console.error("Error request:", error.request);
+        alert(
+          "No response received from server. Please check your network connection."
+        );
+      } else {
+        console.error("Error message:", error.message);
+        alert("An unexpected error occurred: " + error.message);
+      }
+      setReview("Error: Could not retrieve review. Please try again.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const clearCode = () => {
     setCode("");
     setReview("");
-    setCurrentReviewIndex(-1); // Clear selection when clearing code
+    setCurrentReviewIndex(-1);
   };
-
   const copyCode = () => {
     navigator.clipboard.writeText(code);
-    // Optionally add a temporary visual feedback for copy
   };
-
   const downloadReview = () => {
     if (!review) return;
     const blob = new Blob(
@@ -163,13 +160,11 @@ export default function Edit() {
     a.click();
     URL.revokeObjectURL(url);
   };
-
   const loadHistoryItem = (item, index) => {
     setCode(item.code);
     setReview(item.review);
     setCurrentReviewIndex(index);
   };
-
   const deleteHistoryItem = async (historyId, index) => {
     try {
       const response = await axios.delete(
@@ -178,7 +173,6 @@ export default function Edit() {
           withCredentials: true,
         }
       );
-
       if (response.status === 200) {
         const newHistory = reviewHistory.filter((_, i) => i !== index);
         setReviewHistory(newHistory);
@@ -187,45 +181,39 @@ export default function Edit() {
           setReview("");
           setCode(
             '// Welcome to AI Code Reviewer\nfunction example() {\n  console.log("Hello, World!");\n}'
-          ); // Reset code editor
+          );
         } else if (currentReviewIndex > index) {
-          setCurrentReviewIndex(currentReviewIndex - 1); // Adjust index if item before current was deleted
+          setCurrentReviewIndex(currentReviewIndex - 1);
         }
       }
     } catch (error) {
       console.error("Error deleting history item:", error);
-      // Handle error, e.g., show a message
     }
   };
-
   const handleLogout = async () => {
     const success = await logout();
     if (success) {
       navigate("/");
     }
   };
-
-  // New, simpler theme configuration with different background colors
   const themeConfig = {
-    bg: "bg-gray-100", // Light gray background for the entire page
+    bg: "bg-gray-100",
     text: "text-gray-800",
-    header: "bg-gray-800 border-b border-gray-700 text-white shadow-lg", // Dark header
-    sidebar: "bg-gray-700 border-r border-gray-600 text-white", // Darker gray sidebar
-    card: "bg-white border border-gray-200 rounded-xl shadow-md", // Cards remain white for contrast
-    editor: "bg-gray-100 border border-gray-300", // Slightly darker editor
+    header: "bg-gray-800 border-b border-gray-700 text-white shadow-lg",
+    sidebar: "bg-gray-700 border-r border-gray-600 text-white",
+    card: "bg-white border border-gray-200 rounded-xl shadow-md",
+    editor: "bg-gray-100 border border-gray-300",
     button: {
       primary: "bg-blue-500 hover:bg-blue-600 text-white",
-      secondary: "bg-gray-600 hover:bg-gray-500 text-white", // White text for secondary buttons in dark header/sidebar
+      secondary: "bg-gray-600 hover:bg-gray-500 text-white",
       danger: "bg-red-500 hover:bg-red-600 text-white",
       success: "bg-green-500 hover:bg-green-600 text-white",
     },
-    accent: "text-blue-500", // Accent for icons/links
-    // Specific colors for sidebar elements if needed
+    accent: "text-blue-500",
     sidebarText: "text-gray-200",
     sidebarHeader: "text-white",
     sidebarButtonText: "text-white",
   };
-
   const t = themeConfig;
 
   return (
@@ -242,8 +230,7 @@ export default function Edit() {
           </button>
           <div className="flex items-center gap-3">
             <div className={`p-2 rounded-lg ${t.accent} bg-opacity-10`}>
-              <FaRobot className={`text-xl ${t.accent} text-white`} />{" "}
-              {/* Robot icon white in dark header */}
+              <FaRobot className={`text-xl ${t.accent} text-white`} />
             </div>
             <div>
               <h1 className="text-xl font-bold text-white">AI Code Reviewer</h1>
@@ -253,7 +240,6 @@ export default function Edit() {
             </div>
           </div>
         </div>
-
         <div className="flex items-center gap-4">
           <div className="relative">
             <button
@@ -265,7 +251,6 @@ export default function Edit() {
                 {userInfo?.name || "User"}
               </span>
             </button>
-
             {showUserMenu && (
               <div
                 className={`absolute right-0 mt-2 w-48 ${t.card} rounded-lg shadow-lg z-50`}
@@ -288,7 +273,6 @@ export default function Edit() {
           </div>
         </div>
       </header>
-
       <div className="flex flex-1 overflow-hidden">
         {sidebarOpen && (
           <aside className={`w-80 ${t.sidebar} flex flex-col`}>
@@ -310,7 +294,6 @@ export default function Edit() {
                 New Review
               </button>
             </div>
-
             <div className="flex-1 overflow-y-auto p-4">
               {reviewHistory.length === 0 ? (
                 <p className={`text-center opacity-70 py-8 ${t.sidebarText}`}>
@@ -320,11 +303,11 @@ export default function Edit() {
                 <div className="space-y-2">
                   {reviewHistory.map((item, index) => (
                     <div
-                      key={item.id} // Use item.id which will be the DB _id
+                      key={item.id}
                       className={`p-3 rounded-lg cursor-pointer transition-colors border ${
                         currentReviewIndex === index
-                          ? "border-blue-400 bg-blue-100 text-gray-800" // Highlighted item
-                          : "border-gray-600 hover:bg-gray-600 text-gray-200" // Dark sidebar item
+                          ? "border-blue-400 bg-blue-100 text-gray-800"
+                          : "border-gray-600 hover:bg-gray-600 text-gray-200"
                       }`}
                     >
                       <div className="flex justify-between items-start">
@@ -346,7 +329,7 @@ export default function Edit() {
                           </p>
                         </div>
                         <button
-                          onClick={() => deleteHistoryItem(item.id, index)} // Pass item.id to the delete function
+                          onClick={() => deleteHistoryItem(item.id, index)}
                           className="p-1 text-red-300 hover:bg-red-700 rounded"
                         >
                           <FaTrash className="text-xs" />
@@ -359,7 +342,6 @@ export default function Edit() {
             </div>
           </aside>
         )}
-
         <main className="flex-1 flex flex-col overflow-hidden p-6">
           <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className={`flex flex-col ${t.card}`}>
@@ -385,7 +367,6 @@ export default function Edit() {
                   </button>
                 </div>
               </div>
-
               <div className="flex-1 p-4">
                 <div
                   className={`h-full rounded-lg ${t.editor} overflow-hidden`}
@@ -413,7 +394,6 @@ export default function Edit() {
                   />
                 </div>
               </div>
-
               <div className="p-4 border-t border-gray-100">
                 <button
                   onClick={reviewCode}
@@ -436,7 +416,6 @@ export default function Edit() {
                 </button>
               </div>
             </div>
-
             <div className={`flex flex-col ${t.card}`}>
               <div className="flex justify-between items-center p-4 border-b border-gray-100">
                 <h2 className="font-semibold flex items-center gap-2">
@@ -453,7 +432,6 @@ export default function Edit() {
                   </button>
                 )}
               </div>
-
               <div className="flex-1 p-4 overflow-y-auto">
                 {review ? (
                   <div className="prose prose-sm max-w-none">
@@ -478,12 +456,11 @@ export default function Edit() {
           </div>
         </main>
       </div>
-
       {showUserMenu && (
         <div
           className="fixed inset-0 z-40"
           onClick={() => setShowUserMenu(false)}
-        ></div>
+        />
       )}
     </div>
   );
