@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 
+const backendURL = import.meta.env.VITE_BACKEND_URL;
+
 export const useAuth = () => {
   const [token, setToken] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -9,7 +11,7 @@ export const useAuth = () => {
     const checkAuth = async () => {
       try {
         setLoading(true);
-        const response = await fetch("http://localhost:3000/api/tokengetter", {
+        const response = await fetch(`${backendURL}/api/tokengetter`, {
           method: "POST",
           credentials: "include",
         });
@@ -33,7 +35,7 @@ export const useAuth = () => {
 
   const logout = async () => {
     try {
-      const response = await fetch("http://localhost:3000/api/logout", {
+      const response = await fetch(`${backendURL}/api/logout`, {
         method: "POST",
         credentials: "include",
       });
