@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom"; // Combine imports
 import axios from "axios";
 import lock from "../assets/lock.png";
+const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 const Login = () => {
   const [email, setEmail] = useState("");

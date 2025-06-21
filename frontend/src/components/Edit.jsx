@@ -7,6 +7,7 @@ import axios from "axios";
 import Markdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github.css";
+const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 import {
   FaBars,
@@ -40,8 +41,6 @@ export default function Edit() {
   useEffect(() => {
     const fetchReviewHistory = async () => {
       try {
-        const backendURL = import.meta.env.VITE_BACKEND_URL;
-
         const response = await axios.get(
           `${backendURL}/api/get-review-history`,
           {

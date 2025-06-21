@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 
 import { useNavigate } from "react-router-dom";
 import axios from "../api/axios";
+const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 const Register = () => {
   const [name, setName] = useState();
@@ -15,8 +16,6 @@ const Register = () => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-
-    const backendURL = import.meta.env.VITE_BACKEND_URL;
 
     axios
       .post(`${backendURL}/api/register`, { name, email, password })
