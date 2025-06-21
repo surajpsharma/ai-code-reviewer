@@ -40,8 +40,10 @@ export default function Edit() {
   useEffect(() => {
     const fetchReviewHistory = async () => {
       try {
+        const backendURL = import.meta.env.VITE_BACKEND_URL;
+
         const response = await axios.get(
-          "http://localhost:3000/api/get-review-history",
+          `${backendURL}/api/get-review-history`,
           {
             withCredentials: true,
           }
@@ -57,7 +59,9 @@ export default function Edit() {
   useEffect(() => {
     const getUserInfo = async () => {
       try {
-        const response = await fetch("http://localhost:3000/api/tokengetter", {
+        const backendURL = import.meta.env.VITE_BACKEND_URL;
+
+        const response = await fetch(`${backendURL}/api/tokengetter`, {
           method: "POST",
           credentials: "include",
         });
@@ -84,13 +88,17 @@ export default function Edit() {
     try {
       console.log("Frontend: Sending review request...");
 
+      const backendURL = import.meta.env.VITE_BACKEND_URL;
+
       const reviewResponse = await axios.post(
-        "http://localhost:3000/api/get-review",
+        `${backendURL}/api/get-review`,
         {
           code,
           language: "javascript",
         },
-        { withCredentials: true }
+        {
+          withCredentials: true,
+        }
       );
 
       const reviewText = reviewResponse.data;
@@ -100,7 +108,7 @@ export default function Edit() {
 
       // ⚡️ Save review
       await axios.post(
-        "http://localhost:3000/api/save-review-history",
+        `${backendURL}/api/save-review-history`,
         {
           code,
           review: reviewText,
@@ -168,7 +176,7 @@ export default function Edit() {
   const deleteHistoryItem = async (historyId, index) => {
     try {
       const response = await axios.delete(
-        `http://localhost:3000/api/delete-review-history/${historyId}`,
+        `${backendURL}/api/delete-review-history/${historyId}`,
         {
           withCredentials: true,
         }

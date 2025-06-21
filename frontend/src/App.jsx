@@ -9,6 +9,7 @@ import axios from "axios";
 import "./App.css";
 import { useAuth } from "./hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+const backendURL = import.meta.env.VITE_BACKEND_URL;
 function App() {
   const [code, setCode] = useState(``);
   const [loading, setLoading] = useState(false);
@@ -27,12 +28,9 @@ function App() {
 
   async function fetchHistory() {
     try {
-      const response = await axios.get(
-        "http://localhost:3000/api/get-review-history",
-        {
-          withCredentials: true,
-        }
-      );
+      const response = await axios.get(`${backendURL}/api/get-review-history`, {
+        withCredentials: true,
+      });
       setHistory(response.data);
     } catch (error) {
       console.error("Failed to fetch history:", error);
@@ -41,12 +39,9 @@ function App() {
 
   async function deleteHistoryItem(id) {
     try {
-      await axios.delete(
-        `http://localhost:3000/api/delete-review-history/${id}`,
-        {
-          withCredentials: true,
-        }
-      );
+      await axios.delete(`${backendURL}/api/delete-review-history/${id}`, {
+        withCredentials: true,
+      });
       // Refresh history after deletion
       fetchHistory();
     } catch (error) {
@@ -57,15 +52,15 @@ function App() {
   async function saveToHistory(code, review) {
     try {
       await axios.post(
-        "http://localhost:3000/api/save-review-history",
+        `${backendURL}/api/save-review-history`,
         {
           code,
           review,
-          language: "javascript", // You can make this dynamic based on code detection
+          language: "javascript", // Can be dynamic if needed
           timestamp: new Date().toISOString(),
         },
         {
-          withCredentials: true,
+          withCredentials: true, // Required for cookies/session
         }
       );
       console.log("Review saved to history successfully");
@@ -80,7 +75,7 @@ function App() {
     setLoading(true);
     try {
       const response = await axios.post(
-        "http://localhost:3000/api/get-review",
+        `${backendURL}/api/get-review`,
         { code },
         {
           withCredentials: true, // This ensures cookies are sent with the request

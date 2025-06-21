@@ -16,6 +16,7 @@ import {
 import lockImage from "../assets/code.png";
 import { useState, useEffect } from "react";
 import axios from "axios"; // Import axios
+const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 export default function CodeReviewLanding() {
   //use nagivate
@@ -51,7 +52,11 @@ export default function CodeReviewLanding() {
       try {
         // Check for authentication token
         const response = await axios.post(
-          "http://localhost:3000/api/tokengetter"
+          `${backendURL}/api/tokengetter`,
+          null,
+          {
+            withCredentials: true,
+          }
         );
         // If the request is successful (axios throws error for 4xx/5xx by default)
         console.log("Tokengetter response:", response.data);
@@ -85,11 +90,14 @@ export default function CodeReviewLanding() {
     console.log("logout..");
 
     try {
-      const response = await axios.post("http://localhost:3000/api/logout"); // Use axios for consistency
+      const response = await axios.post(`${backendURL}/api/logout`, null, {
+        withCredentials: true,
+      });
+
       if (response.data.success === true) {
         settoken(false); // Clear authentication status
-        setrefresh((prev) => !prev); // Toggle refresh to trigger token check (will now find no token)
-        navigate("/login"); // Redirect to login page after successful logout
+        setrefresh((prev) => !prev); // Toggle refresh to trigger token check
+        navigate("/login"); // Redirect to login page
       }
     } catch (error) {
       console.error(
@@ -106,12 +114,12 @@ export default function CodeReviewLanding() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // NOTE: This contact form uses localhost:5000, ensure your form backend is running there
-      const response = await fetch("http://localhost:5000/api/form/submit", {
+      const response = await fetch(`${backendURL}/api/form/submit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
+
       const data = await response.json();
       if (data.success) {
         alert("Message sent successfully!");
