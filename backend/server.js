@@ -17,7 +17,9 @@ app.use(
     origin: [
       "http://localhost:5173",
       "https://ai-code-reviewer-cyan-five.vercel.app",
+      "https://ai-code-reviewer-cvhwpme5s-suraj-sharma-s-projects.vercel.app", // Add this if it's the real domain
     ],
+
     credentials: true,
   })
 );
