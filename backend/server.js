@@ -14,11 +14,12 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(cookieParser());
 
-// ✅ CORS Configuration for local + Vercel frontend
+// ✅ CORS Configuration for local + all deployed frontend domains
 const allowedOrigins = [
   "http://localhost:5173",
   "https://ai-code-reviewer-cyan-five.vercel.app",
-  "https://ai-code-reviewer-cvhwpme5s-suraj-sharma-s-projects.vercel.app", // your Vercel frontend
+  "https://ai-code-reviewer-cvhwpme5s-suraj-sharma-s-projects.vercel.app",
+  "https://ai-code-reviewer-qm6u4odhw-suraj-sharma-s-projects.vercel.app", // ✅ NEW frontend domain
 ];
 
 app.use(
