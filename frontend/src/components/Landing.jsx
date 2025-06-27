@@ -44,46 +44,40 @@ export default function CodeReviewLanding() {
   }, []);
 
   useEffect(() => {
-    // Configure axios to send cookies with all requests from this component
+    // Ensure all Axios requests from this component send cookies
     axios.defaults.withCredentials = true;
 
-    const getting = async () => {
-      setLoadingAuth(true); // Start loading authentication status
+    const checkAuthentication = async () => {
+      setLoadingAuth(true); // Start loading state
+
       try {
-        // Check for authentication token
         const response = await axios.post(
           `${backendURL}/api/tokengetter`,
-          null,
-          {
-            withCredentials: true,
-          }
+          null, // No request body needed
+          { withCredentials: true }
         );
-        // If the request is successful (axios throws error for 4xx/5xx by default)
-        console.log("Tokengetter response:", response.data);
-        if (response.data.success === true) {
+
+        console.log("✅ Auth Check Response:", response.data);
+
+        if (response.data.success) {
           settoken(true); // User is authenticated
-          // You can also store user data here if needed:
+          // Optional: Store user data if needed
           // setUserData(response.data.decode);
         } else {
-          settoken(false); // User is not authenticated
-          console.log(
-            "Not authenticated, backend responded:",
-            response.data.message
-          );
+          console.log("User is not authenticated");
+          settoken(false);
         }
       } catch (error) {
-        // Axios catches 401 Unauthorized here, as well as network errors
-        console.error(
-          "Authentication check failed:",
-          error.response ? error.response.data : error.message
-        );
-        settoken(false); // User is not authenticated
+        // Log any unexpected errors that might still occur
+        console.error("Authentication check error:", error.message);
+        settoken(false); // Treat as unauthenticated
       } finally {
-        setLoadingAuth(false); // Authentication check is complete
+        setLoadingAuth(false); // Stop loading state
       }
     };
-    getting();
-  }, [refresh]); // refresh state is used to manually trigger re-check, navigate not needed as dependency here
+
+    checkAuthentication();
+  }, [refresh]);
 
   // Logout handler
   const handleLogout = async () => {
@@ -199,7 +193,7 @@ export default function CodeReviewLanding() {
   return (
     <div className="min-h-screen flex flex-col bg-white">
       {/* CSS Variables - Inline styles for a self-contained component */}
-      <style jsx global>{`
+      <style jsx="true" global="true">{`
         :root {
           --color-primary: #4f46e5;
           --color-primary-dark: #4338ca;

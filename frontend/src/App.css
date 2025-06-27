@@ -56,7 +56,6 @@ main .left .review {
   padding: 0.5rem 2rem;
   font-weight: 500;
   cursor: pointer;
-  user-select: none;
   border-radius: 0.7rem;
 }
 

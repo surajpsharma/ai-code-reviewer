@@ -10,12 +10,10 @@ const authMiddleware = (req, res, next) => {
 
   if (!token) {
     console.log("Auth Middleware: No token found in cookies.");
-    return res
-      .status(401)
-      .json({
-        message: "No authentication token provided. Please log in.",
-        success: false,
-      });
+    return res.status(401).json({
+      message: "No authentication token provided. Please log in.",
+      success: false,
+    });
   }
 
   if (!JWT_SECRET) {
@@ -37,19 +35,15 @@ const authMiddleware = (req, res, next) => {
     console.error("Auth Middleware: Token verification failed:", error.message);
     // Common errors: JsonWebTokenError (invalid signature), TokenExpiredError (token expired)
     if (error.name === "TokenExpiredError") {
-      return res
-        .status(401)
-        .json({
-          message: "Authentication token has expired. Please log in again.",
-          success: false,
-        });
-    }
-    return res
-      .status(401)
-      .json({
-        message: "Invalid authentication token. Please log in again.",
+      return res.status(401).json({
+        message: "Authentication token has expired. Please log in again.",
         success: false,
       });
+    }
+    return res.status(401).json({
+      message: "Invalid authentication token. Please log in again.",
+      success: false,
+    });
   }
 };
 
