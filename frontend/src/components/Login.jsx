@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import lock from "../assets/lock.png";
+import { useAuth } from "../hooks/useAuth";
 
 // ✅ Use environment variable for backend URL
 const backendURL = import.meta.env.VITE_BACKEND_URL;
@@ -13,6 +14,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { refreshAuth } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,7 +33,12 @@ const Login = () => {
 
       if (response.data.success === true) {
         console.log("✅ Login successful");
-        navigate("/try"); // Redirect to protected route
+        // Refresh auth state to update token
+        refreshAuth();
+        // Add a small delay to ensure token is updated before navigation
+        setTimeout(() => {
+          navigate("/try"); // Redirect to protected route
+        }, 500);
       } else {
         setError(response.data.message || "Unknown error occurred.");
       }
