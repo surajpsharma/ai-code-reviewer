@@ -35,10 +35,11 @@ const Login = () => {
         console.log("✅ Login successful");
         // Refresh auth state to update token
         refreshAuth();
-        // Add a small delay to ensure token is updated before navigation
+        // Increase the delay to ensure token is properly updated before navigation
         setTimeout(() => {
-          navigate("/try"); // Redirect to protected route
-        }, 500);
+          console.log("Navigating to /try after successful login");
+          navigate("/try"); // Redirect to main protected route
+        }, 1000);
       } else {
         setError(response.data.message || "Unknown error occurred.");
       }

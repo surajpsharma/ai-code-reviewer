@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import axios from "axios";
 
 const backendURL = import.meta.env.VITE_BACKEND_URL;
 
@@ -11,11 +12,16 @@ export const useAuth = () => {
     const checkAuth = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${backendURL}/api/tokengetter`, {
-          method: "POST",
-          credentials: "include",
-        });
-        const getRes = await response.json();
+        // Use axios instead of fetch for better CORS handling
+        const response = await axios.post(
+          `${backendURL}/api/tokengetter`,
+          {}, // Empty body
+          {
+            withCredentials: true, // Important for sending cookies
+          }
+        );
+
+        const getRes = response.data;
 
         if (getRes.success === true) {
           setToken(getRes.token);
@@ -35,11 +41,13 @@ export const useAuth = () => {
 
   const logout = async () => {
     try {
-      const response = await fetch(`${backendURL}/api/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
-      const result = await response.json();
+      const response = await axios.post(
+        `${backendURL}/api/logout`,
+        {}, // Empty body
+        { withCredentials: true } // Important for sending cookies
+      );
+
+      const result = response.data;
 
       if (result.success === true) {
         setToken(false);
