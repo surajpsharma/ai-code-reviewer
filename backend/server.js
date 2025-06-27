@@ -21,6 +21,8 @@ const allowedOrigins = [
   "https://ai-code-reviewer-cyan-five.vercel.app",
   "https://ai-code-reviewer-git-main-suraj-sharma-s-projects.vercel.app",
   "https://ai-code-reviewer-fm49hguls-suraj-sharma-s-projects.vercel.app",
+  "https://ai-code-reviewer-3dn2jmvfl-suraj-sharma-s-projects.vercel.app",
+  "https://ai-code-reviewer-3dn.vercel.app",
   // Render backend deployment URL
   "https://ai-code-reviewer-backend-e4sh.onrender.com",
 ];
