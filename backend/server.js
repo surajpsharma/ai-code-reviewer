@@ -16,8 +16,10 @@ app.use(cookieParser());
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
-  // Add your Vercel deployment URL here - update this with your actual Vercel URL
-  "https://your-vercel-frontend-url.vercel.app",
+  // Vercel frontend deployment URL
+  "https://ai-code-reviewer-qv9kiyx58-suraj-sharma-s-projects.vercel.app",
+  // Render backend deployment URL
+  "https://ai-code-reviewer-backend-e4sh.onrender.com",
 ];
 
 app.use(
@@ -32,8 +34,13 @@ app.use(
       }
     },
     credentials: true, // ✅ Allow cookies in cross-origin requests
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Explicitly allow methods
+    allowedHeaders: ["Content-Type", "Authorization"], // Explicitly allow headers
   })
 );
+
+// Handle OPTIONS preflight requests explicitly
+app.options("*", cors());
 
 // ✅ Routes — Public
 app.use("/api", require("./routes/login"));
@@ -49,6 +56,14 @@ app.use("/api", authMiddleware, require("./routes/get-review"));
 // ✅ Root Route
 app.get("/", (req, res) => {
   res.send("🚀 AI Code Reviewer Server is running...");
+});
+
+// ✅ CORS Test Route
+app.get("/api/cors-test", (req, res) => {
+  res.json({
+    message: "CORS is working correctly!",
+    origin: req.headers.origin || "No origin header",
+  });
 });
 
 // ✅ Start Server After DB Connection
