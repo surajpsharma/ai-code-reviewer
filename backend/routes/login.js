@@ -26,6 +26,18 @@ const JWT_SECRET = process.env.JWT_SECRET;
   };
 
 router.post("/login", async (req, res) => {
+  // Add CORS headers explicitly for this route
+  const origin = req.get("Origin");
+  if (origin) {
+    res.header("Access-Control-Allow-Origin", origin);
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.header(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization, Cookie"
+    );
+  }
+
   const { email, password } = req.body;
 
   const validation = validateLoginInput(email, password);

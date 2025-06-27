@@ -10,26 +10,31 @@ router.post("/tokengetter", async (req, res) => {
   console.log("Backend: User-Agent:", req.get("User-Agent"));
   console.log("Backend: Origin:", req.get("Origin"));
 
+  // Add CORS headers explicitly for this route
+  const origin = req.get("Origin");
+  if (origin) {
+    res.header("Access-Control-Allow-Origin", origin);
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.header(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization, Cookie"
+    );
+  }
+
   try {
     const token = req.cookies.token;
 
     if (!token) {
       console.log("Backend: Token not found in cookies.");
-      return res
-        .status(200)
-        .json({
-          message: "No token found",
-          success: false,
-          authenticated: false,
-        });
+      return res.status(200).json({
+        message: "No token found",
+        success: false,
+        authenticated: false,
+      });
     }
 
     console.log("Backend: Token found in cookies:", token);
-    // --- New Debugging Log ---
-    console.log(
-      "Backend: JWT_SECRET for verification:",
-      process.env.JWT_SECRET
-    );
 
     // Check if JWT_SECRET is actually available
     if (!process.env.JWT_SECRET) {
@@ -57,22 +62,18 @@ router.post("/tokengetter", async (req, res) => {
 
     // Provide more specific error messages based on JWT error types
     if (error.name === "TokenExpiredError") {
-      return res
-        .status(200)
-        .json({
-          message: "Token expired",
-          success: false,
-          authenticated: false,
-        });
+      return res.status(200).json({
+        message: "Token expired",
+        success: false,
+        authenticated: false,
+      });
     } else if (error.name === "JsonWebTokenError") {
       // This covers invalid signature, malformed token, etc.
-      return res
-        .status(200)
-        .json({
-          message: "Invalid token",
-          success: false,
-          authenticated: false,
-        });
+      return res.status(200).json({
+        message: "Invalid token",
+        success: false,
+        authenticated: false,
+      });
     } else {
       // Catch any other unexpected errors during verification
       return res.status(200).json({

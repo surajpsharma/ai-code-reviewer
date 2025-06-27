@@ -16,31 +16,38 @@ app.use(cookieParser());
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
-  // Vercel frontend deployment URL
+  // Vercel frontend deployment URLs
   "https://ai-code-reviewer-qv9kiyx58-suraj-sharma-s-projects.vercel.app",
+  "https://ai-code-reviewer-cyan-five.vercel.app",
+  "https://ai-code-reviewer-git-main-suraj-sharma-s-projects.vercel.app",
+  "https://ai-code-reviewer-fm49hguls-suraj-sharma-s-projects.vercel.app",
   // Render backend deployment URL
   "https://ai-code-reviewer-backend-e4sh.onrender.com",
 ];
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Allow undefined origins like Postman or valid frontend URLs
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.log("Blocked by CORS:", origin);
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true, // ✅ Allow cookies in cross-origin requests
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Explicitly allow methods
-    allowedHeaders: ["Content-Type", "Authorization"], // Explicitly allow headers
-  })
-);
+// Create a CORS configuration object
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow undefined origins like Postman or valid frontend URLs
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log("Blocked by CORS:", origin);
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true, // ✅ Allow cookies in cross-origin requests
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Explicitly allow methods
+  allowedHeaders: ["Content-Type", "Authorization", "Cookie"], // Explicitly allow headers
+  exposedHeaders: ["Set-Cookie"], // Allow frontend to see Set-Cookie header
+  maxAge: 86400, // Cache preflight request results for 24 hours (in seconds)
+};
 
-// Handle OPTIONS preflight requests explicitly
-app.options("*", cors());
+// Apply CORS middleware
+app.use(cors(corsOptions));
+
+// Handle OPTIONS preflight requests explicitly for all routes
+app.options("*", cors(corsOptions));
 
 // ✅ Routes — Public
 app.use("/api", require("./routes/login"));
@@ -58,10 +65,28 @@ app.get("/", (req, res) => {
   res.send("🚀 AI Code Reviewer Server is running...");
 });
 
-// ✅ CORS Test Route
+// ✅ CORS Test Routes
 app.get("/api/cors-test", (req, res) => {
   res.json({
     message: "CORS is working correctly!",
+    origin: req.headers.origin || "No origin header",
+    cookies: req.cookies || "No cookies found",
+  });
+});
+
+// Test route for cookies
+app.get("/api/cookie-test", (req, res) => {
+  // Set a test cookie
+  res.cookie("test-cookie", "cookie-value", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    maxAge: 60 * 1000, // 1 minute
+  });
+
+  res.json({
+    message: "Test cookie set!",
+    existingCookies: req.cookies || "No cookies found",
     origin: req.headers.origin || "No origin header",
   });
 });
