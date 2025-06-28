@@ -40,9 +40,10 @@ const corsOptions = {
   },
   credentials: true, // ✅ Allow cookies in cross-origin requests
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Explicitly allow methods
-  allowedHeaders: ["Content-Type", "Authorization", "Cookie"], // Explicitly allow headers
-  exposedHeaders: ["Set-Cookie"], // Allow frontend to see Set-Cookie header
+  allowedHeaders: ["Content-Type", "Authorization", "Cookie", "Cache-Control"], // Explicitly allow headers
+  exposedHeaders: ["Set-Cookie", "Date", "ETag"], // Allow frontend to see these headers
   maxAge: 86400, // Cache preflight request results for 24 hours (in seconds)
+  preflightContinue: false, // Recommended for OPTIONS handling
 };
 
 // Apply CORS middleware
@@ -78,18 +79,20 @@ app.get("/api/cors-test", (req, res) => {
 
 // Test route for cookies
 app.get("/api/cookie-test", (req, res) => {
-  // Set a test cookie
+  // Set a test cookie with Chrome-compatible settings
   res.cookie("test-cookie", "cookie-value", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure: true, // Always use secure for cross-origin cookies
+    sameSite: "none", // Required for cross-origin cookies in Chrome
     maxAge: 60 * 1000, // 1 minute
+    path: "/",
   });
 
   res.json({
     message: "Test cookie set!",
     existingCookies: req.cookies || "No cookies found",
     origin: req.headers.origin || "No origin header",
+    userAgent: req.headers["user-agent"] || "No user agent",
   });
 });
 

@@ -85,10 +85,12 @@ router.post("/login", async (req, res) => {
     // ✅ Dynamic cookie configuration for development vs production
     const isProduction = process.env.NODE_ENV === "production";
 
+    // Always use sameSite=none for deployed environments to work with all browsers
+    // Chrome on desktop requires sameSite=none with secure=true for cross-origin cookies
     res.cookie("token", token, {
       httpOnly: true,
-      secure: isProduction, // Only secure in production (HTTPS), false for HTTP development
-      sameSite: isProduction ? "none" : "lax", // "none" for cross-origin production, "lax" for development
+      secure: true, // Always use secure for deployed environments
+      sameSite: "none", // Use "none" for all cross-origin requests to work in all browsers
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       path: "/",
     });

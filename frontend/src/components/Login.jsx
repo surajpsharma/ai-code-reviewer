@@ -1,9 +1,10 @@
 import "bootstrap/dist/css/bootstrap.min.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import lock from "../assets/lock.png";
 import { useAuth } from "../hooks/useAuth";
+import { logBrowserInfo, isChrome } from "../utils/cookieHelper";
 
 // ✅ Use environment variable for backend URL
 const backendURL = import.meta.env.VITE_BACKEND_URL;
@@ -15,6 +16,11 @@ const Login = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const { refreshAuth } = useAuth();
+
+  // Log browser information on component mount
+  useEffect(() => {
+    logBrowserInfo();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -35,11 +41,23 @@ const Login = () => {
         console.log("✅ Login successful");
         // Refresh auth state to update token
         refreshAuth();
-        // Increase the delay to ensure token is properly updated before navigation
+
+        // Add a longer delay for Chrome compatibility
+        // This ensures the cookie is properly set before navigation
+        console.log("Waiting for auth state to update before navigation...");
+
+        // Use a longer delay for Chrome on desktop
+        const delayTime = isChrome() ? 2000 : 1000;
+
         setTimeout(() => {
           console.log("Navigating to /try after successful login");
-          navigate("/try"); // Redirect to main protected route
-        }, 1000);
+          // Force a page reload for Chrome to ensure cookies are properly recognized
+          if (isChrome()) {
+            window.location.href = "/try";
+          } else {
+            navigate("/try"); // Redirect to main protected route
+          }
+        }, delayTime);
       } else {
         setError(response.data.message || "Unknown error occurred.");
       }
