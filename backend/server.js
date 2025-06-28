@@ -22,21 +22,42 @@ const allowedOrigins = [
   "https://ai-code-reviewer-git-main-suraj-sharma-s-projects.vercel.app",
   "https://ai-code-reviewer-fm49hguls-suraj-sharma-s-projects.vercel.app",
   "https://ai-code-reviewer-3dn2jmvfl-suraj-sharma-s-projects.vercel.app",
+  "https://ai-code-reviewer-jqg8s3r3k-suraj-sharma-s-projects.vercel.app",
   "https://ai-code-reviewer-3dn.vercel.app",
   // Render backend deployment URL
   "https://ai-code-reviewer-backend-e4sh.onrender.com",
+  // Allow all Vercel preview deployments
+  /\.vercel\.app$/,
 ];
 
 // Create a CORS configuration object
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow undefined origins like Postman or valid frontend URLs
-    if (!origin || allowedOrigins.includes(origin)) {
+    // Allow undefined origins like Postman
+    if (!origin) {
       callback(null, true);
-    } else {
-      console.log("Blocked by CORS:", origin);
-      callback(new Error("Not allowed by CORS"));
+      return;
     }
+
+    // Check exact matches first
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+      return;
+    }
+
+    // Check regex patterns (for Vercel preview deployments)
+    const isAllowed = allowedOrigins.some((allowedOrigin) => {
+      return allowedOrigin instanceof RegExp && allowedOrigin.test(origin);
+    });
+
+    if (isAllowed) {
+      callback(null, true);
+      return;
+    }
+
+    // If we get here, the origin is not allowed
+    console.log("Blocked by CORS:", origin);
+    callback(new Error("Not allowed by CORS"));
   },
   credentials: true, // ✅ Allow cookies in cross-origin requests
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Explicitly allow methods
@@ -114,3 +135,8 @@ const startServer = async () => {
 };
 
 startServer();
+
+// Export the allowedOrigins array for use in other files
+module.exports = {
+  allowedOrigins,
+};

@@ -13,13 +13,30 @@ router.post("/tokengetter", async (req, res) => {
   // Add CORS headers explicitly for this route
   const origin = req.get("Origin");
   if (origin) {
-    res.header("Access-Control-Allow-Origin", origin);
-    res.header("Access-Control-Allow-Credentials", "true");
-    res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    res.header(
-      "Access-Control-Allow-Headers",
-      "Content-Type, Authorization, Cookie"
-    );
+    // Import the allowedOrigins array from the main server file
+    const allowedOrigins = require("../server").allowedOrigins;
+
+    // Check if the origin is allowed
+    let isAllowed = allowedOrigins.includes(origin);
+
+    // If not an exact match, check regex patterns
+    if (!isAllowed) {
+      isAllowed = allowedOrigins.some((allowedOrigin) => {
+        return allowedOrigin instanceof RegExp && allowedOrigin.test(origin);
+      });
+    }
+
+    if (isAllowed) {
+      res.header("Access-Control-Allow-Origin", origin);
+      res.header("Access-Control-Allow-Credentials", "true");
+      res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+      res.header(
+        "Access-Control-Allow-Headers",
+        "Content-Type, Authorization, Cookie, Cache-Control"
+      );
+    } else {
+      console.log("Blocked by CORS in tokengetter:", origin);
+    }
   }
 
   try {
