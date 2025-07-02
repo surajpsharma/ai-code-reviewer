@@ -2,26 +2,47 @@ const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
 
+// Handle OPTIONS requests for CORS preflight specifically for tokengetter
+router.options("/tokengetter", (req, res) => {
+  const origin = req.get("Origin");
+  res.header("Access-Control-Allow-Origin", origin || "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, X-Requested-With"
+  );
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.status(200).send();
+});
+
 router.post("/tokengetter", async (req, res) => {
+  // Set CORS headers explicitly for this route
+  const origin = req.get("Origin");
+  res.header("Access-Control-Allow-Origin", origin || "*");
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, X-Requested-With"
+  );
+
   // --- Enhanced Debugging Logs ---
   console.log("Backend: /tokengetter endpoint hit.");
   console.log("Backend: Received cookies:", req.cookies);
   console.log("Backend: Request headers:", req.headers);
   console.log("Backend: User-Agent:", req.get("User-Agent"));
-  console.log("Backend: Origin:", req.get("Origin"));
+  console.log("Backend: Origin:", origin);
 
   try {
     const token = req.cookies.token;
 
     if (!token) {
       console.log("Backend: Token not found in cookies.");
-      return res
-        .status(200)
-        .json({
-          message: "No token found",
-          success: false,
-          authenticated: false,
-        });
+      return res.status(200).json({
+        message: "No token found",
+        success: false,
+        authenticated: false,
+      });
     }
 
     console.log("Backend: Token found in cookies:", token);
@@ -57,22 +78,18 @@ router.post("/tokengetter", async (req, res) => {
 
     // Provide more specific error messages based on JWT error types
     if (error.name === "TokenExpiredError") {
-      return res
-        .status(200)
-        .json({
-          message: "Token expired",
-          success: false,
-          authenticated: false,
-        });
+      return res.status(200).json({
+        message: "Token expired",
+        success: false,
+        authenticated: false,
+      });
     } else if (error.name === "JsonWebTokenError") {
       // This covers invalid signature, malformed token, etc.
-      return res
-        .status(200)
-        .json({
-          message: "Invalid token",
-          success: false,
-          authenticated: false,
-        });
+      return res.status(200).json({
+        message: "Invalid token",
+        success: false,
+        authenticated: false,
+      });
     } else {
       // Catch any other unexpected errors during verification
       return res.status(200).json({
