@@ -16,12 +16,6 @@ app.use(cookieParser());
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
-  "https://ai-code-reviewer-cyan-five.vercel.app",
-  "https://ai-code-reviewer-cvhwpme5s-suraj-sharma-s-projects.vercel.app",
-  "https://ai-code-reviewer-qm6u4odhw-suraj-sharma-s-projects.vercel.app",
-  // Add your actual Vercel deployment URL here
-  "https://your-vercel-app.vercel.app",
-  // Allow dynamic frontend URL from environment variable
   process.env.FRONTEND_URL,
 ].filter(Boolean); // Remove any undefined values
 
