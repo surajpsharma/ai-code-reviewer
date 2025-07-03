@@ -1,4 +1,4 @@
-AI Code Reviewer
+![Screenshot 2025-06-20 225036](https://github.com/user-attachments/assets/61b41272-5ad7-4af3-bf46-9280f65239e3)AI Code Reviewer
 An AI‑powered code review tool built using the MERN Stack (MongoDB, Express, React (Vite), Node.js), integrated with an AI model (such as Gemini or OpenAI) to review and suggest improvements for user‑submitted code snippets.
 
 ⚡️ Features
@@ -69,16 +69,23 @@ Paste your code.
 Get AI review and suggestions.
 
 Images and screenshots 
-Landing page :  ![homepage](https://github.com/user-attachments/assets/ac503f6f-13df-4469-aa45-d9004657398c)
+Landing page :
+![Screenshot 2025-06-20 153950](https://github.com/user-attachments/assets/eedaa8e6-4f68-4a5f-93d4-57f021cdf1d0)
 
-LoginPage: ![login](https://github.com/user-attachments/assets/05502c42-2f27-4abc-8b1e-eecaef416059)
+LoginPage: 
+![Screenshot 2025-06-20 154038](https://github.com/user-attachments/assets/5ae18736-7c70-43d6-b4f2-c03f79d99d24)
 
-RegisterPage: ![login](https://github.com/user-attachments/assets/b98f7a09-e8f0-46ce-b7e2-b40654bd929c)
+RegisterPage: 
+![regist](https://github.com/user-attachments/assets/ac6d01af-bd3e-4c0e-9030-3e4138206b5c)
 
-ReviewPage  1 :  ![Screenshot 2025-06-20 225036](https://github.com/user-attachments/assets/f2fa8d5e-9ec7-4f13-a300-af6c5125cb96)
-2: ![Screenshot 2025-06-20 225453](https://github.com/user-attachments/assets/4bb1a1df-d312-4d26-a01c-ab4ea4a0e541)
-History: ![Screenshot 2025-06-20 224939](https://github.com/user-attachments/assets/1c23316f-ef13-4d86-b0b3-6a52b73dea7c)
+ReviewPage  1 :  
 
+![Screenshot 2025-06-20 225036](https://github.com/user-attachments/assets/eda149fa-8fdc-422a-acba-382a7e38b6ab)
+
+2: ![Screenshot 2025-06-20 225453](https://github.com/user-attachments/assets/085b1b5f-d441-475b-b73e-ae603bdea43e)
+
+History: 
+![Screenshot 2025-06-20 224939](https://github.com/user-attachments/assets/b28f7512-9da3-4c09-b4f6-54f659cc2c3d)
 
 📁 Project Structure
 css
