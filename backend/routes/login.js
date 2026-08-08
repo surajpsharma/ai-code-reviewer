@@ -1,8 +1,7 @@
-// routes/login.js
 const jwt = require("jsonwebtoken");
 const express = require("express");
 const router = express.Router();
-const FormDataModel = require("../models/FormData");
+const dbService = require("../db/dbService");
 const bcrypt = require("bcryptjs");
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -38,7 +37,7 @@ router.post("/login", async (req, res) => {
   console.log(`🔐 Login attempt for: ${email}`);
 
   try {
-    const user = await FormDataModel.findOne({ email });
+    const user = await dbService.findUserByEmail(email);
     if (!user) {
       console.warn(`❌ Login failed: User not found`);
       return res

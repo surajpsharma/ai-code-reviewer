@@ -1,13 +1,11 @@
-// routes/reviewHistory.js
 const express = require("express");
 const router = express.Router();
-const SearchHistory = require("../models/SearchHistory"); // New schema
+const dbService = require("../db/dbService");
 const authMiddleware = require("../middleware/auth"); // Ensure it's used for protected routes
 
 // =======================
 // SAVE REVIEW HISTORY
 // =======================
-// reviewHistory.js
 router.post("/save-review-history", authMiddleware, async (req, res) => {
   const userId = req.user.id;
 
@@ -26,13 +24,9 @@ router.post("/save-review-history", authMiddleware, async (req, res) => {
   }
 
   try {
-    const newHistoryEntry = new SearchHistory({
-      userId,
-      code,
-      review,
-      language,
-    });
-    await newHistoryEntry.save();
+    const reviewString = typeof review === "object" ? JSON.stringify(review) : review;
+    
+    await dbService.saveReview(userId, code, reviewString, language);
 
     console.log("Review history saved successfully for user:", userId);
     res.status(201).json({ message: "Review history saved successfully." });
@@ -59,20 +53,7 @@ router.get("/get-review-history", authMiddleware, async (req, res) => {
   }
 
   try {
-    const history = await SearchHistory.find({ userId })
-      .sort({ timestamp: -1 })
-      .limit(10);
-
-    const parsedHistory = history.map((entry) => {
-      return {
-        id: entry._id,
-        code: entry.code,
-        review: entry.review,
-        language: entry.language,
-        timestamp: new Date(entry.timestamp).toLocaleString(),
-      };
-    });
-
+    const parsedHistory = await dbService.getReviewHistory(userId);
     res.status(200).json(parsedHistory);
   } catch (error) {
     console.error("Error fetching review history:", error);
@@ -100,8 +81,8 @@ router.delete(
     }
 
     try {
-      const result = await SearchHistory.deleteOne({ _id: historyId, userId });
-      if (result.deletedCount === 0) {
+      const success = await dbService.deleteReviewHistory(historyId, userId);
+      if (!success) {
         return res
           .status(404)
           .json({ message: "History item not found or not authorized." });

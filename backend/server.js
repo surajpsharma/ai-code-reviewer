@@ -55,6 +55,7 @@ app.use("/api", require("./routes/tokengetter"));
 const authMiddleware = require("./middleware/auth");
 app.use("/api", authMiddleware, require("./routes/reviewHistory"));
 app.use("/api", authMiddleware, require("./routes/get-review"));
+app.use("/api", authMiddleware, require("./routes/chat"));
 
 // ✅ Root Route
 app.get("/", (req, res) => {

@@ -16,6 +16,12 @@ const authMiddleware = (req, res, next) => {
     });
   }
 
+  // Guest mode bypass for offline development
+  if (token.startsWith("guest-")) {
+    req.user = { id: "guest-id", name: "Guest Developer", email: "guest@example.local" };
+    return next();
+  }
+
   if (!JWT_SECRET) {
     console.error("Auth Middleware: JWT_SECRET is not set!");
     return res

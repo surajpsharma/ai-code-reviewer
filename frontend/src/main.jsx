@@ -18,7 +18,7 @@ createRoot(document.getElementById("root")).render(
           path="/review"
           element={
             <ProtectedRoute>
-              <App />
+              <Edit />
             </ProtectedRoute>
           }
         />

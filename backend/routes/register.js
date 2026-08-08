@@ -1,14 +1,13 @@
-// routes/register.js
 const express = require("express");
 const router = express.Router();
-const FormDataModel = require("../models/FormData");
+const dbService = require("../db/dbService");
 const bcrypt = require("bcryptjs"); // Make sure bcryptjs is imported
 
 router.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
 
   try {
-    const existingUser = await FormDataModel.findOne({ email });
+    const existingUser = await dbService.findUserByEmail(email);
     if (existingUser) {
       return res
         .status(409)
@@ -22,13 +21,7 @@ router.post("/register", async (req, res) => {
     const salt = await bcrypt.genSalt(10); // Generate a salt (recommended cost factor is 10-12)
     const hashedPassword = await bcrypt.hash(password, salt); // Hash the plain text password
 
-    const newUser = new FormDataModel({
-      name,
-      email,
-      password: hashedPassword, // Make sure you are saving the HASHED password
-    });
-
-    await newUser.save();
+    await dbService.createUser(name, email, hashedPassword);
     console.log(`New user registered successfully: ${email}`);
     res
       .status(201)

@@ -23,7 +23,7 @@ Back‑end: Node.js, Express.js
 
 Database: MongoDB Atlas
 
-AI Model: Gemini / OpenAI API
+AI Model: Gemini / 
 
 Authentication: JWT (JSON Web Tokens)
 
