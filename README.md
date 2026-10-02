@@ -1,115 +1,107 @@
-![Screenshot 2025-06-20 225036](https://github.com/user-attachments/assets/61b41272-5ad7-4af3-bf46-9280f65239e3)AI Code Reviewer
-An AI‑powered code review tool built using the MERN Stack (MongoDB, Express, React (Vite), Node.js), integrated with an AI model (such as Gemini or OpenAI) to review and suggest improvements for user‑submitted code snippets.
+# 🚀 AI Code Reviewer
 
-⚡️ Features
-✅ Paste Code for review.
+![AI Code Reviewer](https://img.shields.io/badge/Gemini%20AI-Powered-8A2BE2?style=for-the-badge&logo=googlebard&logoColor=white)
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white)
 
-✅ Get AI Suggestions for improvements.
+A premium, full-stack MERN application that leverages Google's Gemini AI to provide instant, expert-level code reviews. Paste your code and get a comprehensive analysis covering security, performance, readability, and an AI-refactored version of your code—all within a stunning, glassmorphism UI.
 
-✅ Store and manage code review history.
+---
 
-✅ User Authentication (Signup/Login).
+## ✨ Features
 
-✅ Responsive and clean React (Vite) frontend.
+- **🧠 Google Gemini Integration:** Uses `gemini-3.5-flash-lite` for lightning-fast, highly accurate code reviews.
+- **🛡️ Security & Performance Audits:** Automatically detects vulnerabilities (SQLi, XSS, etc.) and performance bottlenecks (O(n²) loops).
+- **💬 Interactive AI Chat:** Ask follow-up questions directly to the AI about the generated review.
+- **🛠️ Auto-Refactoring:** Gets a complete, production-ready, refactored version of your code.
+- **🧪 Test Generation:** Auto-generates unit tests for your code.
+- **🎨 Premium UI/UX:** Built with a custom glassmorphism design system, smooth micro-animations, and dynamic visual score gauges.
+- **🔒 Secure Authentication:** JWT-based user authentication and secure HTTP-only cookies.
+- **📜 Review History:** Saves all past reviews to your dashboard automatically.
 
-✅ Backend powered by Node.js + Express.
+---
 
-✅ MongoDB Atlas database for persistent storage.
+## 📸 Screenshots
 
-🛠️ Tech Stack
-Front‑end: React (Vite), Tailwind CSS
+*(Add screenshots of your application here)*
+- **Landing Page:** The beautiful animated hero section.
+- **Review Dashboard:** The code editor and radial score gauges.
+- **Interactive Chat:** Asking follow-up questions to the Gemini AI.
 
-Back‑end: Node.js, Express.js
+---
 
-Database: MongoDB Atlas
+## 🛠️ Tech Stack
 
-AI Model: Gemini / 
+### Frontend
+- **React.js** (Vite)
+- **Vanilla CSS** (Custom CSS variables, Glassmorphism, Animations)
+- **Lucide-React** (Icons)
+- **PrismJS** (Syntax Highlighting)
+- **React Markdown** (Markdown Rendering)
 
-Authentication: JWT (JSON Web Tokens)
+### Backend
+- **Node.js & Express.js**
+- **MongoDB & Mongoose** (Database)
+- **JSON Web Tokens (JWT)** (Authentication)
+- **@google/generative-ai** (Gemini SDK)
 
-🚀 Getting Started
-⚡️ Prerequisites
-Node.js (v18 or higher)
+---
 
-⚡️ Installation
-1️⃣ Clone the Repository
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js (v18+)
+- MongoDB cluster (Atlas or local)
+- Google Gemini API Key (Get one from [Google AI Studio](https://aistudio.google.com/))
+
+### 1. Clone the repository
+```bash
 git clone https://github.com/surajpsharma/ai-code-reviewer.git
 cd ai-code-reviewer
+```
 
-2️⃣ Install Dependencies
-Backend:
+### 2. Backend Setup
+```bash
 cd backend
 npm install
+```
+Create a `.env` file in the `backend` directory:
+```env
+JWT_SECRET=your_super_secret_jwt_key
+NODE_ENV=development
+GOOGLE_GEMINI_KEY=your_gemini_api_key_here
+MONGODB_STRING=your_mongodb_connection_string
+```
+Start the backend server:
+```bash
+npm run dev
+```
 
-Frontend:
+### 3. Frontend Setup
+Open a new terminal and run:
+```bash
 cd frontend
 npm install
-
-3️⃣ Configure Environment Variables
-Create a .env file in the backend directory:
-MONGO_URI=your-mongodb-connection-string
-JWT_SECRET=your-jwt-secret
-AI_API_KEY=your-ai-api-key
-PORT=5000
-
-4️⃣ Run the Project
-Backend:
+```
+Create a `.env` file in the `frontend` directory:
+```env
+VITE_BACKEND_URL=http://localhost:3000
+```
+Start the frontend development server:
+```bash
 npm run dev
+```
 
-Frontend:
-npm run dev
+### 4. Open the App
+Navigate to `http://localhost:5173` in your browser!
 
-🌐 Usage
-Open http://localhost:5173 in your browser.
+---
 
-Sign Up / Log In.
+## 🤝 Contributing
 
-Paste your code.
+Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/surajpsharma/ai-code-reviewer/issues).
 
-Get AI review and suggestions.
+## 📝 License
 
-Images and screenshots 
-Landing page :
-![Screenshot 2025-06-20 153950](https://github.com/user-attachments/assets/eedaa8e6-4f68-4a5f-93d4-57f021cdf1d0)
-
-LoginPage: 
-![Screenshot 2025-06-20 154038](https://github.com/user-attachments/assets/5ae18736-7c70-43d6-b4f2-c03f79d99d24)
-
-RegisterPage: 
-![regist](https://github.com/user-attachments/assets/ac6d01af-bd3e-4c0e-9030-3e4138206b5c)
-
-ReviewPage  1 :  
-
-![Screenshot 2025-06-20 225036](https://github.com/user-attachments/assets/eda149fa-8fdc-422a-acba-382a7e38b6ab)
-
-2: ![Screenshot 2025-06-20 225453](https://github.com/user-attachments/assets/085b1b5f-d441-475b-b73e-ae603bdea43e)
-
-History: 
-![Screenshot 2025-06-20 224939](https://github.com/user-attachments/assets/b28f7512-9da3-4c09-b4f6-54f659cc2c3d)
-
-📁 Project Structure
-css
-Copy
-Edit
-├─ backend/
-│ └─ src/
-├─ frontend/
-│ └─ src/
-├─ .env
-├─ .gitignore
-├─ README.md
-
-💡 Future Improvements
-Support for multi‑language code review.
-
-Integrate additional AI models.
-
-Admin Dashboard for review statistics.
-
-Enhance syntax highlighting and editor experience.
-
-👋 Contact
-For questions or collaboration:
-
-Email: surajsharma030805@gmail.com
-
+This project is licensed under the MIT License. Built with ❤️ by Suraj Sharma.
