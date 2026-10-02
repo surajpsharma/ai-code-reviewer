@@ -61,21 +61,17 @@ router.post("/login", async (req, res) => {
 
     const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: "7d" });
 
-    // ✅ Dynamic cookie configuration for development vs production
-    const isProduction = process.env.NODE_ENV === "production";
-
+    // ✅ Set cookie for both local and production cross-origin usage
     res.cookie("token", token, {
       httpOnly: true,
-      secure: isProduction, // Only secure in production (HTTPS), false for HTTP development
-      sameSite: isProduction ? "none" : "lax", // "none" for cross-origin production, "lax" for development
+      secure: true, // Always true so SameSite=none works
+      sameSite: "none", // Required for cross-origin (e.g. Vercel -> Render)
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       path: "/",
     });
 
     console.log(
-      `🍪 Cookie set with config: secure=${isProduction}, sameSite=${
-        isProduction ? "none" : "lax"
-      }`
+      `🍪 Cookie set with config: secure=true, sameSite=none`
     );
 
     console.log(`✅ Login successful for ${email}`);

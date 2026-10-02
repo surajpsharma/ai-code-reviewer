@@ -79,7 +79,7 @@ const Login = () => {
         { withCredentials: true }
       );
       if (response.data.success === true) {
-        navigate("/try");
+        window.location.href = "/try";
       } else {
         setError(response.data.message || "Unknown error occurred.");
       }
