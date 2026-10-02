@@ -9,7 +9,7 @@ async function generateContent(code, language = "auto", focus = "general") {
 
   // Create the model instance dynamically to set the focus mode in systemInstruction
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash",
+    model: "gemini-3.5-flash-lite",
     generationConfig: {
       responseMimeType: "application/json",
     },

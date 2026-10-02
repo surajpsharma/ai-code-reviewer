@@ -8,7 +8,7 @@ async function chatReview(code, reviewContext, messages) {
   }
 
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash",
+    model: "gemini-3.5-flash-lite",
     systemInstruction: `
 You are a helpful Senior AI Pair Programmer. The user is asking follow-up questions about a code review you recently performed.
 Keep your answers professional, direct, and educational.

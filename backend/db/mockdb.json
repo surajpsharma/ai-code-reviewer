@@ -1,0 +1,11 @@
+{
+  "users": [
+    {
+      "_id": "mock-user-1786218853604-kwh1e",
+      "name": "Suraj Sharma",
+      "email": "sharmasuraj1234mumbai@gmail.com",
+      "password": "$2b$10$jUHLRovkclm5g0SB4I8frOaAZz5xQYO89Y7WdRlnd0oEEGXOra9gm"
+    }
+  ],
+  "history": []
+}

@@ -1,3 +1,4 @@
+// Edit.jsx — Premium AI Code Review Workspace
 import { useEffect, useState, useRef } from "react";
 import "prismjs/themes/prism-tomorrow.css";
 import Editor from "react-simple-code-editor";
@@ -9,38 +10,130 @@ import "highlight.js/styles/github-dark.css";
 import { useAuth } from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import {
-  Code,
-  Shield,
-  Zap,
-  Sparkles,
-  Cpu,
-  FileText,
-  CheckCircle,
-  AlertTriangle,
-  Info,
-  Copy,
-  Trash2,
-  Download,
-  LogOut,
-  Send,
-  ChevronLeft,
-  ChevronRight,
-  User,
-  Loader2,
-  FileCode,
-  ArrowRight,
-  MessageSquare,
-  HelpCircle,
-  Check,
-  Plus,
-  History
+  Code2, Shield, Zap, Sparkles, Cpu, FileText,
+  CheckCircle, AlertTriangle, Info, Copy, Trash2,
+  Download, LogOut, Send, ChevronLeft, ChevronRight,
+  User, Loader2, FileCode2, Check, Plus, History,
+  MessageSquare, BarChart3, TestTube, Wrench, X,
+  Moon, Sun, TrendingUp, Award, Brain
 } from "lucide-react";
 
 const backendURL = import.meta.env.VITE_BACKEND_URL;
 
+// ---- Language options ----
+const LANGUAGES = [
+  { value: "auto", label: "Auto Detect" },
+  { value: "javascript", label: "JavaScript" },
+  { value: "typescript", label: "TypeScript" },
+  { value: "python", label: "Python" },
+  { value: "java", label: "Java" },
+  { value: "cpp", label: "C++" },
+  { value: "go", label: "Go" },
+  { value: "rust", label: "Rust" },
+  { value: "html", label: "HTML" },
+  { value: "css", label: "CSS" },
+  { value: "sql", label: "SQL" },
+  { value: "php", label: "PHP" },
+  { value: "csharp", label: "C#" },
+  { value: "ruby", label: "Ruby" },
+  { value: "swift", label: "Swift" },
+  { value: "kotlin", label: "Kotlin" },
+];
+
+// ---- Focus Modes ----
+const FOCUS_MODES = [
+  { value: "general", label: "General Review", icon: BarChart3, color: "#818cf8" },
+  { value: "security", label: "Security Audit", icon: Shield, color: "#34d399" },
+  { value: "performance", label: "Performance", icon: Zap, color: "#fbbf24" },
+  { value: "clean", label: "Clean & Refactor", icon: Sparkles, color: "#c084fc" },
+  { value: "tests", label: "Test Generator", icon: TestTube, color: "#f87171" },
+];
+
+// ---- Score Gauge SVG ----
+const ScoreGauge = ({ score, label, color }) => {
+  const radius = 32;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (score / 100) * circumference;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <svg width="80" height="80" viewBox="0 0 80 80" style={{ transform: 'rotate(-90deg)' }}>
+          <circle cx="40" cy="40" r={radius} stroke="rgba(255,255,255,0.05)" strokeWidth="6" fill="transparent" />
+          <circle
+            cx="40" cy="40" r={radius}
+            stroke={color} strokeWidth="6" fill="transparent"
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            strokeLinecap="round"
+            style={{ transition: 'stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1)', filter: `drop-shadow(0 0 6px ${color}60)` }}
+          />
+        </svg>
+        <div style={{ position: 'absolute', textAlign: 'center' }}>
+          <div style={{ fontSize: '18px', fontWeight: 900, color: '#f1f5f9', letterSpacing: '-0.02em' }}>{score}</div>
+        </div>
+      </div>
+      <span style={{ fontSize: '10px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</span>
+    </div>
+  );
+};
+
+// ---- Progress Bar ----
+const MetricBar = ({ label, score, color, icon: Icon }) => (
+  <div>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#64748b', fontWeight: 600 }}>
+        <Icon size={13} color={color} />{label}
+      </span>
+      <span style={{ fontSize: '12px', fontWeight: 800, color: '#f1f5f9' }}>{score}%</span>
+    </div>
+    <div style={{ height: '5px', background: 'rgba(255,255,255,0.05)', borderRadius: '999px', overflow: 'hidden' }}>
+      <div style={{
+        height: '100%', width: `${score}%`, borderRadius: '999px',
+        background: `linear-gradient(90deg, ${color}80, ${color})`,
+        transition: 'width 1.2s cubic-bezier(0.4,0,0.2,1)',
+        boxShadow: `0 0 8px ${color}50`
+      }} />
+    </div>
+  </div>
+);
+
+// ---- Issue Severity ----
+const getSeverityConfig = (sev) => {
+  switch (sev?.toLowerCase()) {
+    case "critical":
+      return { bg: 'rgba(244,63,94,0.08)', border: 'rgba(244,63,94,0.25)', color: '#f43f5e', icon: <AlertTriangle size={14} color="#f43f5e" /> };
+    case "warning":
+      return { bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.25)', color: '#f59e0b', icon: <AlertTriangle size={14} color="#f59e0b" /> };
+    default:
+      return { bg: 'rgba(34,211,238,0.08)', border: 'rgba(34,211,238,0.25)', color: '#22d3ee', icon: <Info size={14} color="#22d3ee" /> };
+  }
+};
+
+// ---- Empty State ----
+const EmptyState = ({ icon: Icon, title, desc, action }) => (
+  <div style={{
+    display: 'flex', flexDirection: 'column', alignItems: 'center',
+    justifyContent: 'center', height: '100%', textAlign: 'center',
+    padding: '40px 20px'
+  }}>
+    <div style={{
+      width: '72px', height: '72px', borderRadius: '20px',
+      background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      marginBottom: '20px', animation: 'float 3s ease-in-out infinite'
+    }}>
+      <Icon size={30} color="rgba(99,102,241,0.6)" />
+    </div>
+    <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#f1f5f9', marginBottom: '8px' }}>{title}</h3>
+    <p style={{ fontSize: '13px', color: '#334155', lineHeight: 1.7, maxWidth: '280px', marginBottom: action ? '20px' : 0 }}>{desc}</p>
+    {action}
+  </div>
+);
+
+// ---- Main Edit Component ----
 export default function Edit() {
   const [code, setCode] = useState(
-    '// Welcome to AI Code Reviewer\nfunction example() {\n  console.log("Hello, World!");\n}'
+    '// Welcome to AI Code Reviewer 🚀\n// Paste your code here or drag & drop a file\n\nfunction example() {\n  const data = fetch("/api/users?id=" + userId); // potential injection\n  return data;\n}'
   );
   const [review, setReview] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -49,172 +142,107 @@ export default function Edit() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [reviewHistory, setReviewHistory] = useState([]);
   const [currentReviewIndex, setCurrentReviewIndex] = useState(-1);
-
-  // New features state
   const [selectedLanguage, setSelectedLanguage] = useState("auto");
   const [reviewFocus, setReviewFocus] = useState("general");
   const [activeTab, setActiveTab] = useState("dashboard");
   const [dragging, setDragging] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
-  const [copiedFixedCode, setCopiedFixedCode] = useState(false);
-  
-  // Follow-up Chat state
+  const [copiedFixed, setCopiedFixed] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
-  
+  const [notification, setNotification] = useState(null);
+
   const chatEndRef = useRef(null);
   const { logout } = useAuth();
   const navigate = useNavigate();
 
-  // Parse review if it is stored as JSON or stringified JSON
+  // Parse review JSON
   let parsedReview = null;
   let isJsonReview = false;
   try {
     if (review && typeof review === "object") {
-      parsedReview = review;
-      isJsonReview = true;
+      parsedReview = review; isJsonReview = true;
     } else if (review && typeof review === "string" && review.trim().startsWith("{")) {
-      parsedReview = JSON.parse(review);
-      isJsonReview = true;
+      parsedReview = JSON.parse(review); isJsonReview = true;
     }
-  } catch (e) {
-    isJsonReview = false;
-  }
+  } catch (e) { isJsonReview = false; }
 
+  // Fetch review history
   useEffect(() => {
-    const fetchReviewHistory = async () => {
+    const fetchHistory = async () => {
       try {
-        const response = await axios.get(
-          `${backendURL}/api/get-review-history`,
-          {
-            withCredentials: true,
-          }
-        );
-        setReviewHistory(response.data);
-      } catch (error) {
-        console.error("Error fetching review history:", error);
-      }
+        const res = await axios.get(`${backendURL}/api/get-review-history`, { withCredentials: true });
+        setReviewHistory(res.data);
+      } catch (e) { console.error(e); }
     };
-    fetchReviewHistory();
-  }, [userInfo, review]);
+    fetchHistory();
+  }, [review]);
 
+  // Fetch user info
   useEffect(() => {
     const getUserInfo = async () => {
       try {
-        const response = await fetch(`${backendURL}/api/tokengetter`, {
-          method: "POST",
-          credentials: "include",
-        });
-        const getRes = await response.json();
-        if (getRes.success === true) {
-          setUserInfo(getRes.decode);
-        }
-      } catch (error) {
-        console.error("Error fetching user info:", error);
-      }
+        const res = await fetch(`${backendURL}/api/tokengetter`, { method: "POST", credentials: "include" });
+        const data = await res.json();
+        if (data.success) setUserInfo(data.decode);
+      } catch (e) { console.error(e); }
     };
     getUserInfo();
   }, []);
 
+  // Scroll chat to bottom
   useEffect(() => {
-    // Scroll chat to bottom when message log changes
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages, chatLoading]);
 
-  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+  // Show notification
+  const showNotif = (msg, type = 'success') => {
+    setNotification({ msg, type });
+    setTimeout(() => setNotification(null), 3000);
+  };
 
+  // Review code
   const reviewCode = async () => {
-    if (!code.trim()) {
-      alert("⚠️ Please enter some code to review.");
-      return;
-    }
-
+    if (!code.trim()) { showNotif("Please enter some code to review.", "error"); return; }
     setLoading(true);
-    setChatMessages([]); // Reset chat log on new review
+    setChatMessages([]);
     setActiveTab("dashboard");
     try {
-      const reviewResponse = await axios.post(
-        `${backendURL}/api/get-review`,
-        {
-          code,
-          language: selectedLanguage,
-          focus: reviewFocus,
-        },
-        {
-          withCredentials: true,
-        }
-      );
-
-      const reviewData = reviewResponse.data;
-      setReview(reviewData);
-
-      // Save review to history
-      await axios.post(
-        `${backendURL}/api/save-review-history`,
-        {
-          code,
-          review: reviewData,
-          language: reviewData.language || selectedLanguage || "auto",
-        },
-        { withCredentials: true }
-      );
+      const res = await axios.post(`${backendURL}/api/get-review`, { code, language: selectedLanguage, focus: reviewFocus }, { withCredentials: true });
+      setReview(res.data);
+      await axios.post(`${backendURL}/api/save-review-history`, { code, review: res.data, language: res.data.language || selectedLanguage || "auto" }, { withCredentials: true });
+      showNotif("Review complete!");
     } catch (error) {
-      console.error("Error during code review:", error);
-      if (error.response?.status === 401) {
-        alert("Session expired or unauthorized. Please log in again.");
-        logout();
-      } else {
-        const errorMsg = typeof error.response?.data === "string"
-          ? error.response.data
-          : (error.response?.data?.message || error.message);
-        alert("Failed to get review: " + errorMsg);
-      }
+      if (error.response?.status === 401) { logout(); navigate("/login"); }
+      else { showNotif(error.response?.data?.message || "Failed to get review.", "error"); }
     } finally {
       setLoading(false);
     }
   };
 
+  // Chat message
   const sendChatMessage = async (e) => {
     e.preventDefault();
     if (!chatInput.trim() || chatLoading || !review) return;
-
     const userText = chatInput;
     setChatInput("");
-    
-    // Add user message to log
     const updatedMessages = [...chatMessages, { role: "user", text: userText }];
     setChatMessages(updatedMessages);
     setChatLoading(true);
-
     try {
-      const response = await axios.post(
-        `${backendURL}/api/chat-review`,
-        {
-          code,
-          reviewContext: parsedReview || review,
-          messages: updatedMessages,
-        },
-        { withCredentials: true }
-      );
-
-      if (response.data?.response) {
-        setChatMessages((prev) => [
-          ...prev,
-          { role: "model", text: response.data.response },
-        ]);
+      const res = await axios.post(`${backendURL}/api/chat-review`, { code, reviewContext: parsedReview || review, messages: updatedMessages }, { withCredentials: true });
+      if (res.data?.response) {
+        setChatMessages(prev => [...prev, { role: "model", text: res.data.response }]);
       }
-    } catch (error) {
-      console.error("Chat error:", error);
-      setChatMessages((prev) => [
-        ...prev,
-        { role: "model", text: "⚠️ Error sending message. Please try again." },
-      ]);
+    } catch (e) {
+      setChatMessages(prev => [...prev, { role: "model", text: "⚠️ Error sending message. Please try again." }]);
     } finally {
       setChatLoading(false);
     }
   };
 
+  // Clear editor
   const clearCode = () => {
     setCode("");
     setReview(null);
@@ -222,224 +250,213 @@ export default function Edit() {
     setCurrentReviewIndex(-1);
   };
 
-  const copyCodeText = (text, setCopiedState) => {
+  // Copy utility
+  const copyText = (text, setFlag) => {
     navigator.clipboard.writeText(text);
-    setCopiedState(true);
-    setTimeout(() => setCopiedState(false), 2000);
+    setFlag(true);
+    setTimeout(() => setFlag(false), 2000);
+    showNotif("Copied to clipboard!");
   };
 
+  // Download report
   const downloadReview = () => {
     if (!review) return;
-    const reviewContent = typeof review === "object" ? JSON.stringify(review, null, 2) : review;
-    const blob = new Blob(
-      [
-        `# Code Review Report\n\n## Original Code:\n\`\`\`javascript\n${code}\n\`\`\`\n\n## Review Result:\n${reviewContent}`,
-      ],
-      { type: "text/markdown" }
-    );
+    const content = typeof review === "object" ? JSON.stringify(review, null, 2) : review;
+    const blob = new Blob([`# AI Code Review Report\n\n## Code\n\`\`\`\n${code}\n\`\`\`\n\n## Review\n${content}`], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url;
-    a.download = `code-review-${Date.now()}.md`;
-    a.click();
+    a.href = url; a.download = `review-${Date.now()}.md`; a.click();
     URL.revokeObjectURL(url);
+    showNotif("Report downloaded!");
   };
 
+  // Load history
   const loadHistoryItem = (item, index) => {
     setCode(item.code);
     setReview(item.review);
     setChatMessages([]);
     setCurrentReviewIndex(index);
+    if (window.innerWidth < 768) setSidebarOpen(false);
   };
 
-  const deleteHistoryItem = async (historyId, index) => {
+  // Delete history
+  const deleteHistoryItem = async (id, index) => {
     try {
-      const response = await axios.delete(
-        `${backendURL}/api/delete-review-history/${historyId}`,
-        {
-          withCredentials: true,
-        }
-      );
-
-      if (response.status === 200) {
-        const newHistory = reviewHistory.filter((_, i) => i !== index);
-        setReviewHistory(newHistory);
-        if (currentReviewIndex === index) {
-          setCurrentReviewIndex(-1);
-          setReview(null);
-          setChatMessages([]);
-          setCode(
-            '// Welcome to AI Code Reviewer\nfunction example() {\n  console.log("Hello, World!");\n}'
-          );
-        } else if (currentReviewIndex > index) {
-          setCurrentReviewIndex(currentReviewIndex - 1);
-        }
-      }
-    } catch (error) {
-      console.error("Error deleting history item:", error);
-    }
+      await axios.delete(`${backendURL}/api/delete-review-history/${id}`, { withCredentials: true });
+      const updated = reviewHistory.filter((_, i) => i !== index);
+      setReviewHistory(updated);
+      if (currentReviewIndex === index) { setCurrentReviewIndex(-1); setReview(null); setChatMessages([]); }
+      else if (currentReviewIndex > index) setCurrentReviewIndex(currentReviewIndex - 1);
+      showNotif("History item deleted.");
+    } catch (e) { showNotif("Failed to delete.", "error"); }
   };
 
+  // Logout
   const handleLogout = async () => {
     const success = await logout();
-    if (success) {
-      navigate("/");
-    }
+    if (success) navigate("/");
   };
 
-  // Drag and Drop File Handlers
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setDragging(true);
-  };
-
-  const handleDragLeave = () => {
-    setDragging(false);
-  };
-
+  // Drag & Drop
+  const handleDragOver = (e) => { e.preventDefault(); setDragging(true); };
+  const handleDragLeave = () => setDragging(false);
   const handleDrop = (e) => {
-    e.preventDefault();
-    setDragging(false);
+    e.preventDefault(); setDragging(false);
     const file = e.dataTransfer.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setCode(event.target.result);
-        const ext = file.name.split(".").pop().toLowerCase();
-        if (ext === "py") setSelectedLanguage("python");
-        else if (ext === "js") setSelectedLanguage("javascript");
-        else if (ext === "ts" || ext === "tsx") setSelectedLanguage("typescript");
-        else if (ext === "java") setSelectedLanguage("java");
-        else if (ext === "cpp" || ext === "cc" || ext === "h") setSelectedLanguage("cpp");
-        else if (ext === "go") setSelectedLanguage("go");
-        else if (ext === "rs") setSelectedLanguage("rust");
-        else if (ext === "html") setSelectedLanguage("html");
-        else if (ext === "css") setSelectedLanguage("css");
-        else setSelectedLanguage("auto");
-      };
-      reader.readAsText(file);
-    }
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setCode(ev.target.result);
+      const ext = file.name.split(".").pop().toLowerCase();
+      const map = { py: "python", js: "javascript", ts: "typescript", tsx: "typescript", java: "java", cpp: "cpp", cc: "cpp", h: "cpp", go: "go", rs: "rust", html: "html", css: "css", rb: "ruby", php: "php", cs: "csharp", kt: "kotlin", swift: "swift" };
+      setSelectedLanguage(map[ext] || "auto");
+      showNotif(`Loaded ${file.name}`);
+    };
+    reader.readAsText(file);
   };
 
-  // Score Gauge Calculation
-  const renderScoreGauge = (score) => {
-    const radius = 40;
-    const circumference = 2 * Math.PI * radius;
-    const offset = circumference - (score / 100) * circumference;
+  // Review tabs
+  const tabs = [
+    { id: "dashboard", label: "Dashboard", icon: BarChart3 },
+    { id: "issues", label: "Issues", icon: AlertTriangle },
+    { id: "diff", label: "Fixed Code", icon: Wrench },
+    { id: "tests", label: "Test Suite", icon: TestTube },
+    { id: "chat", label: "Ask AI", icon: MessageSquare },
+  ];
 
-    let scoreColor = "stroke-emerald-400";
-    if (score < 50) scoreColor = "stroke-rose-500";
-    else if (score < 80) scoreColor = "stroke-amber-400";
-
-    return (
-      <div className="relative flex items-center justify-center">
-        <svg className="w-24 h-24 transform -rotate-90">
-          <circle
-            cx="48"
-            cy="48"
-            r={radius}
-            stroke="rgba(255, 255, 255, 0.05)"
-            strokeWidth="8"
-            fill="transparent"
-          />
-          <circle
-            cx="48"
-            cy="48"
-            r={radius}
-            stroke="currentColor"
-            strokeWidth="8"
-            fill="transparent"
-            strokeDasharray={circumference}
-            strokeDashoffset={offset}
-            strokeLinecap="round"
-            className={`${scoreColor} transition-all duration-1000 ease-out`}
-          />
-        </svg>
-        <div className="absolute flex flex-col items-center">
-          <span className="text-2xl font-extrabold text-white">{score}</span>
-          <span className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">Quality</span>
-        </div>
-      </div>
-    );
+  const scoreColors = {
+    quality: '#818cf8',
+    security: '#34d399',
+    performance: '#fbbf24',
+    readability: '#c084fc'
   };
 
-  const getSeverityColor = (sev) => {
-    switch (sev?.toLowerCase()) {
-      case "critical":
-        return {
-          bg: "bg-red-500/10",
-          border: "border-red-500/30",
-          text: "text-red-400",
-          icon: <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
-        };
-      case "warning":
-        return {
-          bg: "bg-amber-500/10",
-          border: "border-amber-500/30",
-          text: "text-amber-400",
-          icon: <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
-        };
-      default:
-        return {
-          bg: "bg-cyan-500/10",
-          border: "border-cyan-500/30",
-          text: "text-cyan-400",
-          icon: <Info className="w-4 h-4 text-cyan-400 shrink-0" />
-        };
-    }
-  };
+  const userInitial = userInfo?.name?.charAt(0).toUpperCase() || 'U';
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0b0f19] text-gray-200 overflow-hidden font-sans">
-      {/* Background Neon Blobs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-600/5 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-purple-600/5 blur-[120px] pointer-events-none" />
+    <div style={{
+      minHeight: '100vh', display: 'flex', flexDirection: 'column',
+      background: '#05070f', color: '#f1f5f9', overflow: 'hidden', fontFamily: 'Inter, sans-serif'
+    }}>
+      {/* Background orbs */}
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
+        <div style={{ position: 'absolute', top: '-15%', left: '-10%', width: '50%', height: '50%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 65%)', filter: 'blur(80px)' }} />
+        <div style={{ position: 'absolute', bottom: '-15%', right: '-10%', width: '50%', height: '50%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 65%)', filter: 'blur(80px)' }} />
+      </div>
 
-      {/* Header bar */}
-      <header className="h-16 flex justify-between items-center px-6 border-b border-white/10 bg-[#0d1117]/80 backdrop-blur-md z-30 shadow-lg">
-        <div className="flex items-center gap-4">
+      {/* Toast Notification */}
+      {notification && (
+        <div className="animate-fade-in" style={{
+          position: 'fixed', bottom: '24px', right: '24px', zIndex: 200,
+          padding: '12px 20px', borderRadius: '12px',
+          background: notification.type === 'error' ? 'rgba(244,63,94,0.12)' : 'rgba(16,185,129,0.12)',
+          border: `1px solid ${notification.type === 'error' ? 'rgba(244,63,94,0.3)' : 'rgba(16,185,129,0.3)'}`,
+          color: notification.type === 'error' ? '#fb7185' : '#34d399',
+          fontSize: '13px', fontWeight: 600,
+          display: 'flex', alignItems: 'center', gap: '8px',
+          backdropFilter: 'blur(12px)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
+        }}>
+          {notification.type === 'error' ? <AlertTriangle size={14} /> : <CheckCircle size={14} />}
+          {notification.msg}
+        </div>
+      )}
+
+      {/* ===== HEADER ===== */}
+      <header style={{
+        position: 'relative', zIndex: 50, height: '60px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0 16px',
+        background: 'rgba(5,7,15,0.9)',
+        backdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        boxShadow: '0 1px 20px rgba(0,0,0,0.3)',
+        flexShrink: 0
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {/* Sidebar toggle */}
           <button
-            onClick={toggleSidebar}
-            className="p-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-gray-300 transition"
-            title="Toggle Sidebar"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            style={{
+              width: '34px', height: '34px', borderRadius: '8px',
+              background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#64748b', cursor: 'pointer', transition: 'all 0.2s'
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#f1f5f9'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = '#64748b'; }}
           >
-            {sidebarOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+            {sidebarOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
           </button>
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-tr from-blue-500/20 to-purple-500/20 border border-blue-500/30 text-blue-400">
-              <Code className="w-6 h-6" />
+
+          {/* Logo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{
+              width: '32px', height: '32px', borderRadius: '9px',
+              background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 0 16px rgba(99,102,241,0.35)'
+            }}>
+              <Code2 size={16} color="white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-white tracking-wide">AI Code Reviewer</h1>
-              <p className="text-xs text-gray-400">Smart Code Insights & Interactive Refactoring</p>
+              <div style={{ fontSize: '15px', fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.02em', lineHeight: 1 }}>AI Reviewer</div>
+              <div style={{ fontSize: '10px', color: '#334155', fontWeight: 500, lineHeight: 1, marginTop: '2px' }}>Powered by Gemini 2.0</div>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          {/* User profile details */}
-          <div className="relative">
+        {/* Header right actions */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {/* User menu */}
+          <div style={{ position: 'relative' }}>
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition text-sm text-gray-300"
+              style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                padding: '6px 12px', borderRadius: '10px',
+                background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                color: '#94a3b8', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#f1f5f9'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = '#94a3b8'; }}
             >
-              <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center text-[10px] font-bold text-white">
-                {userInfo?.name?.charAt(0).toUpperCase() || <User className="w-3.5 h-3.5" />}
+              <div style={{
+                width: '24px', height: '24px', borderRadius: '50%',
+                background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '11px', fontWeight: 800, color: 'white'
+              }}>
+                {userInitial}
               </div>
-              <span className="hidden md:inline font-medium">{userInfo?.name || "Developer"}</span>
+              <span style={{ display: 'none' }} className="md-show">{userInfo?.name || "Developer"}</span>
             </button>
+
             {showUserMenu && (
-              <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-white/10 bg-slate-900 shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                <div className="p-3 border-b border-white/5">
-                  <p className="font-semibold text-white text-sm">{userInfo?.name}</p>
-                  <p className="text-xs text-gray-400 truncate">{userInfo?.email}</p>
+              <div className="animate-fade-in" style={{
+                position: 'absolute', right: 0, top: 'calc(100% + 8px)',
+                width: '220px', borderRadius: '14px',
+                background: 'rgba(10,13,26,0.95)', border: '1px solid rgba(255,255,255,0.1)',
+                boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+                backdropFilter: 'blur(20px)', zIndex: 100, overflow: 'hidden'
+              }}>
+                <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#f1f5f9' }}>{userInfo?.name || "Developer"}</div>
+                  <div style={{ fontSize: '12px', color: '#334155', marginTop: '2px' }}>{userInfo?.email || "guest@local"}</div>
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-red-500/10 text-red-400 rounded-xl mt-1 text-sm transition"
+                  style={{
+                    width: '100%', padding: '12px 16px', textAlign: 'left',
+                    background: 'none', color: '#f43f5e', fontSize: '13px', fontWeight: 600,
+                    display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer',
+                    transition: 'background 0.2s'
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(244,63,94,0.08)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'none'}
                 >
-                  <LogOut className="w-4 h-4" />
-                  Log Out
+                  <LogOut size={14} /> Sign Out
                 </button>
               </div>
             )}
@@ -447,64 +464,104 @@ export default function Edit() {
         </div>
       </header>
 
-      {/* Main Workspace Frame */}
-      <div className="flex flex-1 overflow-hidden relative">
-        {/* Sidebar for History Log */}
+      {/* ===== MAIN WORKSPACE ===== */}
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative', zIndex: 1 }}>
+
+        {/* ===== SIDEBAR ===== */}
         {sidebarOpen && (
-          <aside className="w-80 border-r border-white/10 bg-[#0d1117]/60 backdrop-blur-sm flex flex-col z-20">
-            <div className="p-4 border-b border-white/10">
-              <h3 className="text-sm font-bold tracking-wide uppercase text-gray-400 mb-3 flex items-center gap-2">
-                <History className="w-4 h-4" /> Review History
-              </h3>
+          <aside style={{
+            width: '280px', flexShrink: 0,
+            background: 'rgba(5,7,15,0.8)', backdropFilter: 'blur(16px)',
+            borderRight: '1px solid rgba(255,255,255,0.06)',
+            display: 'flex', flexDirection: 'column', zIndex: 20
+          }}>
+            {/* Sidebar header */}
+            <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  <History size={12} /> Review History
+                </div>
+                <span style={{
+                  background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.2)',
+                  color: '#818cf8', fontSize: '10px', fontWeight: 700,
+                  padding: '2px 8px', borderRadius: '999px'
+                }}>
+                  {reviewHistory.length}
+                </span>
+              </div>
               <button
                 onClick={clearCode}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-xl text-sm font-semibold transition shadow-md active:scale-95"
+                style={{
+                  width: '100%', padding: '9px 12px',
+                  background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+                  color: 'white', borderRadius: '10px', fontSize: '12px', fontWeight: 700,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                  cursor: 'pointer', border: 'none', transition: 'opacity 0.2s',
+                  boxShadow: '0 4px 16px rgba(99,102,241,0.3)'
+                }}
+                onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
               >
-                <Plus className="w-4 h-4" /> New Review
+                <Plus size={13} /> New Review
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-3 space-y-2.5 custom-scrollbar">
+            {/* History list */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '10px' }}>
               {reviewHistory.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center text-gray-500">
-                  <FileCode className="w-10 h-10 mb-2 opacity-30" />
-                  <p className="text-xs">No records yet</p>
+                <div style={{ textAlign: 'center', padding: '40px 20px', color: '#334155' }}>
+                  <FileCode2 size={32} style={{ margin: '0 auto 12px', opacity: 0.3, display: 'block' }} />
+                  <p style={{ fontSize: '12px' }}>No reviews yet</p>
+                  <p style={{ fontSize: '11px', marginTop: '4px', color: '#1e293b' }}>Start coding above</p>
                 </div>
               ) : (
                 reviewHistory.map((item, index) => (
                   <div
                     key={item.id}
-                    className={`p-3 rounded-xl border cursor-pointer transition relative group ${
-                      currentReviewIndex === index
-                        ? "border-purple-500/60 bg-purple-500/5 text-white"
-                        : "border-white/5 hover:border-white/20 bg-[#0d1117]/40 hover:bg-[#0d1117] text-gray-300"
-                    }`}
+                    style={{
+                      padding: '10px 12px', borderRadius: '10px', marginBottom: '6px',
+                      border: `1px solid ${currentReviewIndex === index ? 'rgba(99,102,241,0.4)' : 'rgba(255,255,255,0.05)'}`,
+                      background: currentReviewIndex === index ? 'rgba(99,102,241,0.08)' : 'rgba(255,255,255,0.02)',
+                      cursor: 'pointer', transition: 'all 0.2s',
+                      position: 'relative', overflow: 'hidden'
+                    }}
+                    onClick={() => loadHistoryItem(item, index)}
+                    onMouseEnter={e => { if (currentReviewIndex !== index) { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; } }}
+                    onMouseLeave={e => { if (currentReviewIndex !== index) { e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)'; } }}
                   >
-                    <div className="flex justify-between items-start" onClick={() => loadHistoryItem(item, index)}>
-                      <div className="flex-1 min-w-0 pr-6">
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/5 border border-white/10 uppercase tracking-wider text-purple-400">
-                            {item.language}
-                          </span>
-                        </div>
-                        <p className="text-xs font-mono truncate text-gray-400 mb-1">
-                          {item.code.split("\n")[0] || "Empty Code snippet"}
-                        </p>
-                        <p className="text-[9px] text-gray-500">
-                          {item.timestamp}
-                        </p>
-                      </div>
+                    {/* Language badge */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                      <span style={{
+                        fontSize: '9px', fontWeight: 800, padding: '2px 8px', borderRadius: '999px',
+                        background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)',
+                        color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.06em'
+                      }}>
+                        {item.language || 'auto'}
+                      </span>
+                      <button
+                        onClick={e => { e.stopPropagation(); deleteHistoryItem(item.id, index); }}
+                        style={{
+                          width: '22px', height: '22px', borderRadius: '6px',
+                          background: 'none', color: '#334155',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          cursor: 'pointer', transition: 'all 0.2s', border: 'none'
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(244,63,94,0.1)'; e.currentTarget.style.color = '#f43f5e'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#334155'; }}
+                      >
+                        <Trash2 size={11} />
+                      </button>
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteHistoryItem(item.id, index);
-                      }}
-                      className="absolute right-3 top-3 p-1.5 text-gray-500 hover:text-red-400 rounded-lg hover:bg-white/5 opacity-0 group-hover:opacity-100 transition"
-                      title="Delete History"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    <p style={{
+                      fontSize: '11px', fontFamily: "'JetBrains Mono', monospace",
+                      color: currentReviewIndex === index ? '#94a3b8' : '#475569',
+                      marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+                    }}>
+                      {item.code.split("\n")[0] || "Empty snippet"}
+                    </p>
+                    <p style={{ fontSize: '10px', color: '#1e293b' }}>
+                      {new Date(item.timestamp).toLocaleDateString() || item.timestamp}
+                    </p>
                   </div>
                 ))
               )}
@@ -512,420 +569,605 @@ export default function Edit() {
           </aside>
         )}
 
-        {/* Editor & AI split screen viewport */}
-        <main className="flex-1 flex flex-col md:flex-row overflow-hidden p-4 gap-4">
-          
-          {/* LEFT: Editor Frame */}
-          <div className="flex-1 flex flex-col border border-white/10 rounded-2xl bg-[#0d1117]/50 backdrop-blur-md overflow-hidden relative shadow-2xl">
-            {/* Editor Config bar */}
-            <div className="flex flex-wrap items-center justify-between p-3 border-b border-white/10 bg-[#0d1117]/90 gap-2">
-              <div className="flex items-center gap-3">
-                {/* Language Select */}
-                <div>
-                  <label className="text-[10px] uppercase font-bold text-gray-500 block mb-0.5">Language</label>
-                  <select
-                    value={selectedLanguage}
-                    onChange={(e) => setSelectedLanguage(e.target.value)}
-                    className="bg-white/5 border border-white/10 text-white rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-purple-500 transition"
-                  >
-                    <option value="auto" className="bg-[#0b0f19]">Auto-detect</option>
-                    <option value="javascript" className="bg-[#0b0f19]">JavaScript</option>
-                    <option value="typescript" className="bg-[#0b0f19]">TypeScript</option>
-                    <option value="python" className="bg-[#0b0f19]">Python</option>
-                    <option value="java" className="bg-[#0b0f19]">Java</option>
-                    <option value="cpp" className="bg-[#0b0f19]">C++</option>
-                    <option value="go" className="bg-[#0b0f19]">Go</option>
-                    <option value="rust" className="bg-[#0b0f19]">Rust</option>
-                    <option value="html" className="bg-[#0b0f19]">HTML</option>
-                    <option value="css" className="bg-[#0b0f19]">CSS</option>
-                  </select>
-                </div>
+        {/* ===== MAIN CONTENT ===== */}
+        <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '12px', gap: '12px' }}>
 
-                {/* Review Mode Focus */}
-                <div>
-                  <label className="text-[10px] uppercase font-bold text-gray-500 block mb-0.5">Review Focus</label>
-                  <select
-                    value={reviewFocus}
-                    onChange={(e) => setReviewFocus(e.target.value)}
-                    className="bg-white/5 border border-white/10 text-white rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-purple-500 transition"
-                  >
-                    <option value="general" className="bg-[#0b0f19]">General Quality</option>
-                    <option value="security" className="bg-[#0b0f19]">🔐 Security Audit</option>
-                    <option value="performance" className="bg-[#0b0f19]">⚡ Performance Booster</option>
-                    <option value="clean" className="bg-[#0b0f19]">✨ Clean & Refactor</option>
-                    <option value="tests" className="bg-[#0b0f19]">🧪 Test Cases Generator</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Copy / Clear buttons */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => copyCodeText(code, setCopiedCode)}
-                  className="p-1.5 rounded-lg border border-white/10 hover:bg-white/5 hover:text-white transition text-gray-400"
-                  title="Copy Code"
-                >
-                  {copiedCode ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                </button>
-                <button
-                  onClick={clearCode}
-                  className="p-1.5 rounded-lg border border-red-500/20 hover:bg-red-500/10 text-gray-400 hover:text-red-400 transition"
-                  title="Clear Editor"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* Core Code Editor Input */}
-            <div
-              className={`flex-1 overflow-auto relative p-4 transition-colors ${
-                dragging ? "bg-purple-500/10 border-2 border-dashed border-purple-500" : ""
-              }`}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-            >
-              {dragging && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0d1117]/80 pointer-events-none z-10">
-                  <FileCode className="w-12 h-12 text-purple-400 animate-bounce mb-2" />
-                  <p className="text-sm font-semibold text-white">Drop your source file here</p>
-                  <p className="text-xs text-gray-400">We support JS, PY, TS, C++, Go, Java, Rust</p>
-                </div>
-              )}
-              
-              <Editor
-                value={code}
-                onValueChange={setCode}
-                highlight={(code) =>
-                  prism.highlight(
-                    code,
-                    prism.languages[selectedLanguage === "auto" ? "javascript" : selectedLanguage] || prism.languages.javascript,
-                    selectedLanguage === "auto" ? "javascript" : selectedLanguage
-                  )
-                }
-                padding={12}
-                className="font-mono text-sm leading-relaxed"
+          {/* Top: Focus + Language controls */}
+          <div style={{
+            display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center',
+            padding: '10px 14px', borderRadius: '12px',
+            background: 'rgba(5,7,15,0.6)', backdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255,255,255,0.06)',
+            flexShrink: 0
+          }}>
+            {/* Language select */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '10px', color: '#334155', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>Language</span>
+              <select
+                value={selectedLanguage}
+                onChange={e => setSelectedLanguage(e.target.value)}
                 style={{
-                  fontFamily: '"Fira Code", "JetBrains Mono", "Consolas", monospace',
-                  minHeight: "100%",
-                  backgroundColor: "transparent"
+                  background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                  color: '#94a3b8', borderRadius: '8px', padding: '5px 10px',
+                  fontSize: '12px', fontFamily: 'inherit', outline: 'none', cursor: 'pointer'
                 }}
-                placeholder="Paste code or drag and drop a file here to review..."
-              />
+              >
+                {LANGUAGES.map(l => (
+                  <option key={l.value} value={l.value} style={{ background: '#0a0d1a' }}>{l.label}</option>
+                ))}
+              </select>
             </div>
 
-            {/* Submit Action */}
-            <div className="p-4 border-t border-white/10 bg-[#0d1117]/60">
-              <button
-                onClick={reviewCode}
-                disabled={loading}
-                className="w-full py-3.5 rounded-xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 text-white transition flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed select-none active:scale-[0.99]"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Reviewing & Refactoring Code...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-5 h-5" />
-                    Analyze Code Quality
-                  </>
-                )}
-              </button>
+            <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.06)' }} />
+
+            {/* Focus mode tabs */}
+            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+              {FOCUS_MODES.map(mode => (
+                <button
+                  key={mode.value}
+                  onClick={() => setReviewFocus(mode.value)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '5px',
+                    padding: '5px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600,
+                    background: reviewFocus === mode.value ? `rgba(${mode.color.includes('#818') ? '129,140,248' : mode.color.includes('#34') ? '52,211,153' : mode.color.includes('#fb') ? '251,191,36' : mode.color.includes('#c0') ? '192,132,252' : '248,113,113'}, 0.12)` : 'rgba(255,255,255,0.03)',
+                    color: reviewFocus === mode.value ? mode.color : '#475569',
+                    border: `1px solid ${reviewFocus === mode.value ? `${mode.color}40` : 'rgba(255,255,255,0.06)'}`,
+                    cursor: 'pointer', transition: 'all 0.2s'
+                  }}
+                >
+                  <mode.icon size={11} /> {mode.label}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* RIGHT: AI Review Hub & Follow-up Chat */}
-          <div className="flex-1 flex flex-col border border-white/10 rounded-2xl bg-[#0d1117]/50 backdrop-blur-md overflow-hidden shadow-2xl relative">
-            
-            {/* Header Tabs */}
-            <div className="flex justify-between items-center border-b border-white/10 bg-[#0d1117]/90 px-4">
-              {review && isJsonReview ? (
-                <div className="flex overflow-x-auto gap-1 py-2 custom-scrollbar">
-                  {[
-                    { id: "dashboard", label: "Dashboard", icon: <Cpu className="w-3.5 h-3.5" /> },
-                    { id: "issues", label: "Issues List", icon: <AlertTriangle className="w-3.5 h-3.5" /> },
-                    { id: "diff", label: "Refactored Diff", icon: <FileText className="w-3.5 h-3.5" /> },
-                    { id: "tests", label: "Unit Tests", icon: <CheckCircle className="w-3.5 h-3.5" /> }
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition shrink-0 ${
-                        activeTab === tab.id
-                          ? "bg-purple-600/20 text-purple-400 border border-purple-500/30"
-                          : "text-gray-400 hover:text-white border border-transparent hover:bg-white/5"
-                      }`}
-                    >
-                      {tab.icon}
-                      {tab.label}
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div className="py-3.5">
-                  <h2 className="text-sm font-bold tracking-wide uppercase text-gray-400 flex items-center gap-2">
-                    <Sparkles className="w-4 h-4" /> AI Diagnostics Hub
-                  </h2>
-                </div>
-              )}
+          {/* Code editor + Review panels */}
+          <div style={{ flex: 1, display: 'flex', gap: '12px', overflow: 'hidden', minHeight: 0 }}>
 
-              {/* Action buttons */}
-              {review && (
+            {/* ===== LEFT: Code Editor ===== */}
+            <div style={{
+              flex: 1, display: 'flex', flexDirection: 'column',
+              borderRadius: '14px', overflow: 'hidden',
+              background: 'rgba(5,7,15,0.7)', backdropFilter: 'blur(12px)',
+              border: '1px solid rgba(255,255,255,0.07)',
+              boxShadow: '0 4px 24px rgba(0,0,0,0.3)'
+            }}>
+              {/* Editor toolbar */}
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)',
+                background: 'rgba(5,7,15,0.5)', flexShrink: 0
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <FileCode2 size={13} color="#475569" />
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>Code Editor</span>
+                </div>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button
+                    onClick={() => copyText(code, setCopiedCode)}
+                    data-tooltip="Copy Code"
+                    style={{
+                      width: '28px', height: '28px', borderRadius: '7px',
+                      background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: copiedCode ? '#34d399' : '#475569', cursor: 'pointer', transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#f1f5f9'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = copiedCode ? '#34d399' : '#475569'; }}
+                  >
+                    {copiedCode ? <Check size={13} /> : <Copy size={13} />}
+                  </button>
+                  <button
+                    onClick={clearCode}
+                    data-tooltip="Clear Editor"
+                    style={{
+                      width: '28px', height: '28px', borderRadius: '7px',
+                      background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: '#475569', cursor: 'pointer', transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(244,63,94,0.1)'; e.currentTarget.style.color = '#f43f5e'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = '#475569'; }}
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Editor area with drag/drop */}
+              <div
+                style={{
+                  flex: 1, overflow: 'auto', position: 'relative',
+                  background: dragging ? 'rgba(99,102,241,0.06)' : 'transparent',
+                  borderRadius: dragging ? '0 0 14px 14px' : '0',
+                  border: dragging ? '2px dashed rgba(99,102,241,0.4)' : '2px solid transparent',
+                  transition: 'all 0.2s'
+                }}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
+                {dragging && (
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    background: 'rgba(5,7,15,0.85)', zIndex: 10, pointerEvents: 'none'
+                  }}>
+                    <FileCode2 size={40} color="rgba(99,102,241,0.7)" style={{ marginBottom: '12px', animation: 'float 1.5s ease-in-out infinite' }} />
+                    <p style={{ color: '#f1f5f9', fontWeight: 700, fontSize: '15px' }}>Drop your file</p>
+                    <p style={{ color: '#475569', fontSize: '12px', marginTop: '4px' }}>JS, TS, PY, JAVA, GO, RS, C++...</p>
+                  </div>
+                )}
+                <Editor
+                  value={code}
+                  onValueChange={setCode}
+                  highlight={c => prism.highlight(c, prism.languages[selectedLanguage !== 'auto' ? selectedLanguage : 'javascript'] || prism.languages.javascript, selectedLanguage !== 'auto' ? selectedLanguage : 'javascript')}
+                  padding={16}
+                  style={{
+                    fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+                    fontSize: '13.5px', lineHeight: 1.7, minHeight: '100%',
+                    backgroundColor: 'transparent', color: '#cbd5e1'
+                  }}
+                  placeholder="Paste your code here, or drag & drop a file..."
+                />
+              </div>
+
+              {/* Review button */}
+              <div style={{ padding: '12px 14px', borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(5,7,15,0.5)', flexShrink: 0 }}>
                 <button
-                  onClick={downloadReview}
-                  className="p-1.5 rounded-lg border border-white/10 hover:bg-white/5 text-gray-400 hover:text-white transition"
-                  title="Download Review Report"
+                  onClick={reviewCode}
+                  disabled={loading}
+                  style={{
+                    width: '100%', padding: '13px',
+                    background: loading ? 'rgba(99,102,241,0.3)' : 'linear-gradient(135deg, #4f46e5, #6366f1, #8b5cf6)',
+                    color: 'white', borderRadius: '11px', fontWeight: 800, fontSize: '14px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                    border: 'none', cursor: loading ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.25s ease',
+                    boxShadow: loading ? 'none' : '0 6px 24px rgba(99,102,241,0.35)',
+                    letterSpacing: '-0.01em'
+                  }}
+                  onMouseEnter={e => { if (!loading) { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 10px 32px rgba(99,102,241,0.45)'; } }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = loading ? 'none' : '0 6px 24px rgba(99,102,241,0.35)'; }}
                 >
-                  <Download className="w-4 h-4" />
+                  {loading ? (
+                    <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Analyzing with Gemini AI...</>
+                  ) : (
+                    <><Sparkles size={16} /> Analyze Code Quality</>
+                  )}
                 </button>
-              )}
+              </div>
             </div>
 
-            {/* AI Review Pane Contents */}
-            <div className="flex-1 overflow-y-auto p-5 custom-scrollbar">
-              {!review ? (
-                // Empty state
-                <div className="flex flex-col items-center justify-center h-full text-center py-20">
-                  <div className="p-4 rounded-full bg-white/5 border border-white/10 text-gray-400 mb-4 animate-pulse">
-                    <Sparkles className="w-10 h-10 opacity-40" />
-                  </div>
-                  <h3 className="text-base font-bold text-white mb-1.5">Code review waiting</h3>
-                  <p className="text-xs text-gray-400 max-w-xs leading-relaxed">
-                    Pasted your code snippet? Set your focus mode and hit "Analyze Code" to populate this workspace.
-                  </p>
-                </div>
-              ) : isJsonReview ? (
-                // Structured JSON Review Dashboard
-                <div>
-                  
-                  {/* TAB 1: DASHBOARD */}
-                  {activeTab === "dashboard" && (
-                    <div className="space-y-6">
-                      {/* Top metrics card */}
-                      <div className="p-5 rounded-2xl border border-white/5 bg-[#0d1117]/70 flex flex-col sm:flex-row items-center gap-6 shadow-md">
-                        {renderScoreGauge(parsedReview.scores?.quality || 0)}
-                        <div className="flex-1 space-y-4 w-full">
-                          <h3 className="text-sm font-bold text-white uppercase tracking-wider">Metrics Breakdown</h3>
-                          <div className="space-y-2.5">
-                            {[
-                              { label: "Security Health", score: parsedReview.scores?.security, color: "bg-emerald-500", icon: <Shield className="w-3.5 h-3.5 text-emerald-400" /> },
-                              { label: "Performance", score: parsedReview.scores?.performance, color: "bg-indigo-500", icon: <Zap className="w-3.5 h-3.5 text-indigo-400" /> },
-                              { label: "Readability", score: parsedReview.scores?.readability, color: "bg-purple-500", icon: <FileText className="w-3.5 h-3.5 text-purple-400" /> }
-                            ].map((bar) => (
-                              <div key={bar.label}>
-                                <div className="flex justify-between items-center text-xs mb-1 font-semibold">
-                                  <span className="flex items-center gap-1.5 text-gray-300">{bar.icon}{bar.label}</span>
-                                  <span className="text-white">{bar.score}%</span>
-                                </div>
-                                <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                  <div
-                                    className={`h-full ${bar.color} transition-all duration-1000`}
-                                    style={{ width: `${bar.score}%` }}
-                                  />
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
+            {/* ===== RIGHT: Review Panel ===== */}
+            <div style={{
+              flex: 1, display: 'flex', flexDirection: 'column',
+              borderRadius: '14px', overflow: 'hidden',
+              background: 'rgba(5,7,15,0.7)', backdropFilter: 'blur(12px)',
+              border: '1px solid rgba(255,255,255,0.07)',
+              boxShadow: '0 4px 24px rgba(0,0,0,0.3)'
+            }}>
 
-                      {/* Summary */}
-                      <div className="space-y-2">
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-purple-400">Analysis Summary</h4>
-                        <div className="p-4 rounded-xl border border-white/5 bg-[#0d1117]/30 text-sm leading-relaxed text-gray-300">
-                          {parsedReview.summary}
-                        </div>
-                      </div>
-
-                      {/* Improvements Card */}
-                      {parsedReview.improvements && parsedReview.improvements.length > 0 && (
-                        <div className="space-y-2">
-                          <h4 className="text-xs font-bold uppercase tracking-wider text-blue-400">Key Optimizations Added</h4>
-                          <ul className="grid grid-cols-1 gap-2">
-                            {parsedReview.improvements.map((item, idx) => (
-                              <li key={idx} className="flex gap-2.5 items-start p-3 bg-white/5 border border-white/5 rounded-xl text-xs text-gray-300">
-                                <CheckCircle className="w-4.5 h-4.5 text-emerald-400 shrink-0" />
-                                <span>{item}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* TAB 2: ISSUES LIST */}
-                  {activeTab === "issues" && (
-                    <div className="space-y-4">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-purple-400">Vulnerabilities & Suggestions</h3>
-                      {(!parsedReview.issues || parsedReview.issues.length === 0) ? (
-                        <div className="p-8 border border-white/5 bg-emerald-500/10 rounded-xl flex flex-col items-center justify-center text-center">
-                          <CheckCircle className="w-10 h-10 text-emerald-400 mb-2" />
-                          <h4 className="font-semibold text-white text-sm">Perfect Score!</h4>
-                          <p className="text-xs text-gray-400 mt-1">No critical issues or warnings found in this codebase.</p>
-                        </div>
-                      ) : (
-                        <div className="space-y-3">
-                          {parsedReview.issues.map((issue, idx) => {
-                            const config = getSeverityColor(issue.severity);
-                            return (
-                              <div key={idx} className={`p-4 border rounded-xl flex flex-col gap-2.5 ${config.bg} ${config.border}`}>
-                                <div className="flex justify-between items-start gap-2">
-                                  <div className="flex items-center gap-2 min-w-0">
-                                    {config.icon}
-                                    <h4 className={`text-sm font-bold truncate ${config.text}`}>{issue.title}</h4>
-                                  </div>
-                                  {issue.line > 0 && (
-                                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-white/5 border border-white/10 text-gray-400 shrink-0">
-                                      Line {issue.line}
-                                    </span>
-                                  )}
-                                </div>
-                                <p className="text-xs text-gray-300 leading-relaxed font-medium">{issue.description}</p>
-                                {issue.fix && (
-                                  <div className="p-3 rounded-lg bg-black/40 border border-white/5 font-mono text-[11px] leading-relaxed text-slate-300">
-                                    <span className="text-[10px] font-bold text-emerald-400 block mb-1">Recommended Correction:</span>
-                                    {issue.fix}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* TAB 3: DIFF VIEW */}
-                  {activeTab === "diff" && (
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-purple-400">Refactored Code</h3>
-                        <button
-                          onClick={() => copyCodeText(parsedReview.fixedCode, setCopiedFixedCode)}
-                          className="flex items-center gap-1.5 px-3 py-1 bg-white/5 border border-white/10 hover:bg-white/10 rounded-lg text-xs font-semibold text-gray-300 transition"
-                        >
-                          {copiedFixedCode ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                          Copy Refactored
-                        </button>
-                      </div>
-
-                      <div className="space-y-3">
-                        <div className="grid grid-cols-1 gap-3">
-                          <div className="border border-white/5 bg-black/40 rounded-xl overflow-hidden">
-                            <div className="bg-slate-900 px-4 py-2 border-b border-white/5 text-[10px] uppercase font-bold text-emerald-400">
-                              Optimized Version
-                            </div>
-                            <pre className="p-4 overflow-auto font-mono text-xs text-slate-300 max-h-[500px]">
-                              <code>{parsedReview.fixedCode}</code>
-                            </pre>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* TAB 4: TEST CASES */}
-                  {activeTab === "tests" && (
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-purple-400">Generated Tests Suite</h3>
-                        <button
-                          onClick={() => copyCodeText(parsedReview.testCases, setCopiedFixedCode)}
-                          className="flex items-center gap-1.5 px-3 py-1 bg-white/5 border border-white/10 hover:bg-white/10 rounded-lg text-xs font-semibold text-gray-300 transition"
-                        >
-                          {copiedFixedCode ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                          Copy Suite
-                        </button>
-                      </div>
-
-                      <div className="border border-white/5 bg-black/40 rounded-xl overflow-hidden">
-                        <pre className="p-4 overflow-auto font-mono text-xs text-slate-300 max-h-[500px]">
-                          <code>{parsedReview.testCases}</code>
-                        </pre>
-                      </div>
-                    </div>
-                  )}
-
-                </div>
-              ) : (
-                // Fallback for Raw Text / Old Markdown Reviews
-                <div className="prose prose-invert prose-sm max-w-none">
-                  <Markdown rehypePlugins={[rehypeHighlight]}>
-                    {review}
-                  </Markdown>
-                </div>
-              )}
-
-              {/* Chat log displays inside the review tab if a review is active */}
-              {review && chatMessages.length > 0 && (
-                <div className="mt-8 border-t border-white/10 pt-6 space-y-4">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
-                    <MessageSquare className="w-3.5 h-3.5" /> Interactive Discussions
-                  </h4>
-                  <div className="space-y-3">
-                    {chatMessages.map((msg, idx) => (
-                      <div
-                        key={idx}
-                        className={`flex flex-col max-w-[85%] rounded-2xl p-3.5 text-xs shadow-md leading-relaxed ${
-                          msg.role === "user"
-                            ? "bg-purple-600/10 border border-purple-500/20 text-gray-200 self-end ml-auto rounded-tr-none"
-                            : "bg-[#0d1117]/80 border border-white/5 text-gray-300 mr-auto rounded-tl-none prose prose-invert max-w-none"
-                        }`}
+              {/* Tabs header */}
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '0 14px', borderBottom: '1px solid rgba(255,255,255,0.06)',
+                background: 'rgba(5,7,15,0.5)', flexShrink: 0, minHeight: '48px'
+              }}>
+                {review && isJsonReview ? (
+                  <div style={{ display: 'flex', gap: '2px', overflowX: 'auto', padding: '6px 0' }}>
+                    {tabs.map(tab => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '5px',
+                          padding: '5px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600,
+                          background: activeTab === tab.id ? 'rgba(99,102,241,0.15)' : 'transparent',
+                          color: activeTab === tab.id ? '#818cf8' : '#475569',
+                          border: `1px solid ${activeTab === tab.id ? 'rgba(99,102,241,0.3)' : 'transparent'}`,
+                          cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap'
+                        }}
                       >
-                        <span className="text-[9px] font-bold text-gray-500 mb-1 uppercase tracking-wide">
-                          {msg.role === "user" ? "You" : "AI Reviewer"}
-                        </span>
-                        {msg.role === "user" ? (
-                          <p>{msg.text}</p>
-                        ) : (
-                          <Markdown rehypePlugins={[rehypeHighlight]}>{msg.text}</Markdown>
+                        <tab.icon size={12} /> {tab.label}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 0', fontSize: '12px', fontWeight: 600, color: '#334155' }}>
+                    <Sparkles size={13} /> AI Diagnostics Hub
+                  </div>
+                )}
+
+                {/* Download button */}
+                {review && (
+                  <button
+                    onClick={downloadReview}
+                    data-tooltip="Download Report"
+                    style={{
+                      width: '28px', height: '28px', borderRadius: '7px',
+                      background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: '#475569', cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#f1f5f9'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = '#475569'; }}
+                  >
+                    <Download size={13} />
+                  </button>
+                )}
+              </div>
+
+              {/* Review content area */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+
+                {!review ? (
+                  <EmptyState
+                    icon={Sparkles}
+                    title="Awaiting Code Review"
+                    desc="Paste your code in the editor, choose a review focus, and hit 'Analyze Code Quality' to get started."
+                  />
+                ) : isJsonReview ? (
+                  <div className="animate-fade-in">
+
+                    {/* TAB: DASHBOARD */}
+                    {activeTab === "dashboard" && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        {/* Score gauges */}
+                        <div style={{
+                          padding: '20px', borderRadius: '14px',
+                          background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '16px' }}>
+                            <BarChart3 size={14} color="#6366f1" />
+                            <span style={{ fontSize: '11px', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Quality Scores</span>
+                            {parsedReview.language && (
+                              <span style={{
+                                marginLeft: 'auto', padding: '2px 10px', borderRadius: '999px',
+                                background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)',
+                                color: '#818cf8', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase'
+                              }}>{parsedReview.language}</span>
+                            )}
+                          </div>
+
+                          {/* Score gauges row */}
+                          <div style={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
+                            {parsedReview.scores && Object.entries(parsedReview.scores).map(([key, val]) => (
+                              <ScoreGauge key={key} score={val} label={key} color={scoreColors[key] || '#818cf8'} />
+                            ))}
+                          </div>
+
+                          {/* Metric bars */}
+                          {parsedReview.scores && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                              {[
+                                { label: 'Security Health', score: parsedReview.scores.security, color: '#34d399', icon: Shield },
+                                { label: 'Performance', score: parsedReview.scores.performance, color: '#fbbf24', icon: Zap },
+                                { label: 'Readability', score: parsedReview.scores.readability, color: '#c084fc', icon: FileText },
+                              ].map(bar => <MetricBar key={bar.label} {...bar} />)}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Summary */}
+                        {parsedReview.summary && (
+                          <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(99,102,241,0.05)', border: '1px solid rgba(99,102,241,0.12)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                              <Brain size={13} color="#818cf8" />
+                              <span style={{ fontSize: '11px', fontWeight: 800, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.08em' }}>AI Summary</span>
+                            </div>
+                            <p style={{ fontSize: '13.5px', color: '#94a3b8', lineHeight: 1.75 }}>{parsedReview.summary}</p>
+                          </div>
+                        )}
+
+                        {/* Improvements */}
+                        {parsedReview.improvements?.length > 0 && (
+                          <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                              <TrendingUp size={13} color="#34d399" />
+                              <span style={{ fontSize: '11px', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Key Improvements</span>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                              {parsedReview.improvements.map((item, i) => (
+                                <div key={i} style={{
+                                  display: 'flex', gap: '10px', padding: '10px 12px',
+                                  background: 'rgba(52,211,153,0.04)', border: '1px solid rgba(52,211,153,0.12)',
+                                  borderRadius: '10px', alignItems: 'flex-start'
+                                }}>
+                                  <CheckCircle size={14} color="#34d399" style={{ flexShrink: 0, marginTop: '1px' }} />
+                                  <span style={{ fontSize: '13px', color: '#94a3b8', lineHeight: 1.6 }}>{item}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
                         )}
                       </div>
-                    ))}
-                    {chatLoading && (
-                      <div className="bg-[#0d1117]/80 border border-white/5 text-gray-300 mr-auto rounded-2xl rounded-tl-none p-3.5 text-xs max-w-[85%] flex items-center gap-2 shadow-md">
-                        <Loader2 className="w-4 h-4 animate-spin text-purple-400" />
-                        <span className="text-gray-400">Gemini is thinking...</span>
+                    )}
+
+                    {/* TAB: ISSUES */}
+                    {activeTab === "issues" && (
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '14px' }}>
+                          <AlertTriangle size={13} color="#818cf8" />
+                          <span style={{ fontSize: '11px', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                            Vulnerabilities & Suggestions
+                          </span>
+                          <span style={{ marginLeft: 'auto', padding: '2px 8px', borderRadius: '999px', background: 'rgba(244,63,94,0.1)', border: '1px solid rgba(244,63,94,0.2)', color: '#f43f5e', fontSize: '10px', fontWeight: 700 }}>
+                            {parsedReview.issues?.length || 0} issues
+                          </span>
+                        </div>
+
+                        {(!parsedReview.issues || parsedReview.issues.length === 0) ? (
+                          <EmptyState
+                            icon={CheckCircle}
+                            title="No Issues Found!"
+                            desc="Your code is clean. No critical vulnerabilities or warnings detected."
+                          />
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            {parsedReview.issues.map((issue, idx) => {
+                              const cfg = getSeverityConfig(issue.severity);
+                              return (
+                                <div key={idx} style={{
+                                  padding: '14px 16px', borderRadius: '12px',
+                                  background: cfg.bg, border: `1px solid ${cfg.border}`
+                                }}>
+                                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px', marginBottom: '8px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                      {cfg.icon}
+                                      <span style={{ fontSize: '13px', fontWeight: 700, color: cfg.color }}>{issue.title}</span>
+                                    </div>
+                                    {issue.line > 0 && (
+                                      <span style={{
+                                        padding: '2px 8px', borderRadius: '6px',
+                                        background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
+                                        color: '#475569', fontSize: '10px', fontWeight: 700, flexShrink: 0
+                                      }}>
+                                        Line {issue.line}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p style={{ fontSize: '12.5px', color: '#94a3b8', lineHeight: 1.7, marginBottom: issue.fix ? '10px' : 0 }}>
+                                    {issue.description}
+                                  </p>
+                                  {issue.fix && (
+                                    <div style={{
+                                      padding: '10px 12px', borderRadius: '8px',
+                                      background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.06)'
+                                    }}>
+                                      <span style={{ fontSize: '10px', fontWeight: 800, color: '#34d399', display: 'block', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                                        ✅ Fix
+                                      </span>
+                                      <code style={{ fontSize: '11.5px', color: '#94a3b8', fontFamily: "'JetBrains Mono', monospace", lineHeight: 1.6 }}>
+                                        {issue.fix}
+                                      </code>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     )}
-                    <div ref={chatEndRef} />
+
+                    {/* TAB: FIXED CODE */}
+                    {activeTab === "diff" && (
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Wrench size={13} color="#818cf8" />
+                            <span style={{ fontSize: '11px', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                              AI Refactored Code
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => copyText(parsedReview.fixedCode, setCopiedFixed)}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: '6px',
+                              padding: '6px 12px', borderRadius: '8px',
+                              background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                              color: copiedFixed ? '#34d399' : '#475569', fontSize: '12px', fontWeight: 600,
+                              cursor: 'pointer', transition: 'all 0.2s'
+                            }}
+                          >
+                            {copiedFixed ? <Check size={12} /> : <Copy size={12} />}
+                            {copiedFixed ? 'Copied!' : 'Copy Code'}
+                          </button>
+                        </div>
+                        <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.06)' }}>
+                          <div style={{
+                            padding: '8px 14px', background: 'rgba(52,211,153,0.06)',
+                            borderBottom: '1px solid rgba(52,211,153,0.12)',
+                            fontSize: '10px', fontWeight: 800, color: '#34d399',
+                            textTransform: 'uppercase', letterSpacing: '0.08em',
+                            display: 'flex', alignItems: 'center', gap: '6px'
+                          }}>
+                            <CheckCircle size={10} /> Optimized & Refactored
+                          </div>
+                          <pre style={{
+                            padding: '16px', overflowX: 'auto', margin: 0,
+                            fontFamily: "'JetBrains Mono', monospace", fontSize: '12.5px',
+                            lineHeight: 1.7, color: '#94a3b8',
+                            background: 'rgba(0,0,0,0.4)', maxHeight: '500px', overflowY: 'auto'
+                          }}>
+                            <code>{parsedReview.fixedCode}</code>
+                          </pre>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TAB: TEST SUITE */}
+                    {activeTab === "tests" && (
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <TestTube size={13} color="#818cf8" />
+                            <span style={{ fontSize: '11px', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                              Generated Test Suite
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => copyText(parsedReview.testCases, setCopiedFixed)}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: '6px',
+                              padding: '6px 12px', borderRadius: '8px',
+                              background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                              color: copiedFixed ? '#34d399' : '#475569', fontSize: '12px', fontWeight: 600,
+                              cursor: 'pointer', transition: 'all 0.2s'
+                            }}
+                          >
+                            {copiedFixed ? <Check size={12} /> : <Copy size={12} />}
+                            Copy Tests
+                          </button>
+                        </div>
+                        <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.06)' }}>
+                          <div style={{
+                            padding: '8px 14px', background: 'rgba(99,102,241,0.06)',
+                            borderBottom: '1px solid rgba(99,102,241,0.12)',
+                            fontSize: '10px', fontWeight: 800, color: '#818cf8',
+                            textTransform: 'uppercase', letterSpacing: '0.08em',
+                            display: 'flex', alignItems: 'center', gap: '6px'
+                          }}>
+                            <TestTube size={10} /> Complete Test Coverage
+                          </div>
+                          <pre style={{
+                            padding: '16px', overflowX: 'auto', margin: 0,
+                            fontFamily: "'JetBrains Mono', monospace", fontSize: '12.5px',
+                            lineHeight: 1.7, color: '#94a3b8',
+                            background: 'rgba(0,0,0,0.4)', maxHeight: '500px', overflowY: 'auto'
+                          }}>
+                            <code>{parsedReview.testCases}</code>
+                          </pre>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TAB: CHAT */}
+                    {activeTab === "chat" && (
+                      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                        {chatMessages.length === 0 ? (
+                          <EmptyState
+                            icon={MessageSquare}
+                            title="Ask about this review"
+                            desc="Have questions about the review? Ask the AI reviewer anything about the code, issues, or suggested fixes."
+                          />
+                        ) : (
+                          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            {chatMessages.map((msg, idx) => (
+                              <div key={idx} style={{
+                                display: 'flex', flexDirection: 'column',
+                                alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                                maxWidth: '88%',
+                                alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start'
+                              }}>
+                                <span style={{
+                                  fontSize: '9px', color: '#334155', fontWeight: 700,
+                                  textTransform: 'uppercase', letterSpacing: '0.08em',
+                                  marginBottom: '4px', paddingLeft: '4px', paddingRight: '4px'
+                                }}>
+                                  {msg.role === 'user' ? 'You' : '🤖 AI Reviewer'}
+                                </span>
+                                <div style={{
+                                  padding: '10px 14px', borderRadius: '12px',
+                                  borderBottomRightRadius: msg.role === 'user' ? '4px' : '12px',
+                                  borderBottomLeftRadius: msg.role === 'user' ? '12px' : '4px',
+                                  background: msg.role === 'user' ? 'rgba(99,102,241,0.12)' : 'rgba(255,255,255,0.04)',
+                                  border: `1px solid ${msg.role === 'user' ? 'rgba(99,102,241,0.25)' : 'rgba(255,255,255,0.06)'}`,
+                                  fontSize: '13px', color: '#cbd5e1', lineHeight: 1.7
+                                }}>
+                                  {msg.role === 'user' ? (
+                                    <p style={{ margin: 0 }}>{msg.text}</p>
+                                  ) : (
+                                    <div className="prose-dark" style={{ fontSize: '13px' }}>
+                                      <Markdown rehypePlugins={[rehypeHighlight]}>{msg.text}</Markdown>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                            {chatLoading && (
+                              <div style={{
+                                display: 'flex', alignItems: 'center', gap: '8px',
+                                padding: '10px 14px', borderRadius: '12px', borderBottomLeftRadius: '4px',
+                                background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)',
+                                width: 'fit-content', maxWidth: '70%'
+                              }}>
+                                <Loader2 size={13} color="#6366f1" style={{ animation: 'spin 1s linear infinite' }} />
+                                <span style={{ fontSize: '12px', color: '#475569' }}>Gemini is thinking...</span>
+                              </div>
+                            )}
+                            <div ref={chatEndRef} />
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                   </div>
+                ) : (
+                  // Fallback: raw markdown review
+                  <div className="prose-dark animate-fade-in">
+                    <Markdown rehypePlugins={[rehypeHighlight]}>{typeof review === 'string' ? review : JSON.stringify(review, null, 2)}</Markdown>
+                  </div>
+                )}
+              </div>
+
+              {/* Chat input (only when review exists and on chat tab or messages exist) */}
+              {review && (
+                <div style={{
+                  padding: '10px 14px', borderTop: '1px solid rgba(255,255,255,0.06)',
+                  background: 'rgba(5,7,15,0.5)', flexShrink: 0
+                }}>
+                  <form onSubmit={sendChatMessage} style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                      type="text"
+                      placeholder="Ask follow-up questions about this review..."
+                      value={chatInput}
+                      onChange={e => setChatInput(e.target.value)}
+                      disabled={chatLoading}
+                      style={{
+                        flex: 1, padding: '10px 14px',
+                        background: 'rgba(5,7,15,0.6)', border: '1px solid rgba(255,255,255,0.08)',
+                        borderRadius: '10px', color: '#f1f5f9', fontSize: '13px', fontFamily: 'inherit',
+                        outline: 'none', transition: 'border-color 0.2s'
+                      }}
+                      onFocus={e => {
+                        setActiveTab('chat');
+                        e.target.style.borderColor = 'rgba(99,102,241,0.5)';
+                      }}
+                      onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.08)'}
+                    />
+                    <button
+                      type="submit"
+                      disabled={chatLoading || !chatInput.trim()}
+                      style={{
+                        width: '38px', height: '38px', borderRadius: '10px',
+                        background: chatInput.trim() && !chatLoading ? 'linear-gradient(135deg, #6366f1, #a855f7)' : 'rgba(255,255,255,0.04)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: chatInput.trim() && !chatLoading ? 'white' : '#334155',
+                        cursor: chatInput.trim() && !chatLoading ? 'pointer' : 'not-allowed',
+                        transition: 'all 0.2s', flexShrink: 0
+                      }}
+                    >
+                      <Send size={14} />
+                    </button>
+                  </form>
                 </div>
               )}
-
             </div>
 
-            {/* Bottom Follow-up Chat Console input */}
-            {review && (
-              <div className="p-4 border-t border-white/10 bg-[#0d1117]/80">
-                <form onSubmit={sendChatMessage} className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Ask follow-up questions about this review..."
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    disabled={chatLoading}
-                    className="flex-1 bg-slate-950/40 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition"
-                  />
-                  <button
-                    type="submit"
-                    disabled={chatLoading || !chatInput.trim()}
-                    className="p-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white transition disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
-                  >
-                    <Send className="w-4 h-4" />
-                  </button>
-                </form>
-              </div>
-            )}
-
           </div>
-
         </main>
       </div>
+
+      {/* Click outside to close user menu */}
+      {showUserMenu && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 40 }}
+          onClick={() => setShowUserMenu(false)}
+        />
+      )}
     </div>
   );
 }
