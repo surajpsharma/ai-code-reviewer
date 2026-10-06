@@ -105,3 +105,12 @@ Contributions, issues, and feature requests are welcome! Feel free to check the 
 ## 📝 License
 
 This project is licensed under the MIT License. Built with ❤️ by Suraj Sharma.
+
+---
+
+## 📫 Contact Me
+
+**Suraj Sharma**
+- **GitHub:** [@surajpsharma](https://github.com/surajpsharma)
+- **Instagram:** [suraj\_\_sharma\_\_](https://www.instagram.com/__suraj__sharma____)
+- **Email:** [surajsharma030805@gmail.com](mailto:surajsharma030805@gmail.com)

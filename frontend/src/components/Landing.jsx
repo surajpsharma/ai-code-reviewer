@@ -7,7 +7,7 @@ import {
   Star, ChevronDown, Sparkles, Brain, GitMerge, Cpu,
   FileCode2, Lock, TrendingUp, MessageSquare, Play,
   Github, Twitter, Mail, ExternalLink, Check, Users,
-  BarChart3, Award, Layers
+  BarChart3, Award, Layers, Instagram
 } from "lucide-react";
 
 const backendURL = import.meta.env.VITE_BACKEND_URL;
@@ -773,7 +773,8 @@ export default function Landing() {
           </p>
           <div style={{ display: 'flex', gap: '20px' }}>
             {[
-              { icon: Github, href: 'https://github.com/surajpsharma/ai-code-reviewer' },
+              { icon: Github, href: 'https://github.com/surajpsharma' },
+              { icon: Instagram, href: 'https://www.instagram.com/__suraj__sharma____' },
               { icon: Mail, href: 'mailto:surajsharma030805@gmail.com' },
             ].map(({ icon: Icon, href }, i) => (
               <a key={i} href={href} target="_blank" rel="noreferrer" style={{
